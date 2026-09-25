@@ -1,0 +1,15 @@
+# Imagem de DESENVOLVIMENTO do frontend Esporte+ (Vite dev server com HMR).
+# O código-fonte vem via bind mount do docker-compose; aqui só ficam as deps
+# instaladas no container (isolando de diferenças de plataforma do host).
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Deps primeiro — aproveita o cache do Docker enquanto o package.json não muda
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Vite dev server (5173) — hot-reload configurado em vite.config.js
+EXPOSE 5173
+
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]

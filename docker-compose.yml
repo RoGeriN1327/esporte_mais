@@ -1,0 +1,228 @@
+# =============================================================================
+# Esporte+ — ambiente de DESENVOLVIMENTO completo com um único comando.
+#
+# Sobe:  Postgres · Mailpit · Backend (FastAPI + hot-reload) · Frontend (Vite HMR)
+# Bônus: pgAdmin (perfil "tools", opcional)
+#
+# Uso rápido:
+#   docker compose up --build          # 1ª vez / após mudar Dockerfile/requirements
+#   docker compose up                  # subidas seguintes (já mostra logs de todos)
+#   docker compose up -d               # em background; ver logs abaixo
+#   docker compose logs -f backend     # acompanhar só o backend
+#   docker compose logs -f             # acompanhar TUDO
+#   docker compose down                # derrubar (volume do Postgres é preservado)
+#   docker compose down -v             # zerar TAMBÉM o banco (perde dados)
+#   docker compose --profile tools up  # inclui pgAdmin (http://localhost:5050)
+#
+# Hot-reload:
+#   * Backend  — uvicorn --reload observa ./backend/app; salvar arquivo já recarrega
+#   * Frontend — Vite HMR observa ./frontend/src; mudanças aparecem no browser
+#     (Windows/macOS usam polling — configurado em vite.config.js).
+#
+# Portas expostas ao host:
+#   Frontend (Vite dev)     http://localhost:5173
+#   Backend  (FastAPI)      http://localhost:8000   (Swagger em /docs)
+#   Mailpit  (UI de e-mail) http://localhost:8025
+#   pgAdmin  (perfil tools) http://localhost:5050   (admin@esportemais.local / admin)
+#   Postgres                localhost:5432
+#
+# Login inicial: gestor@esportemais.local / Admin@2026
+# (troque em produção via variáveis GESTOR_INICIAL_* no .env da raiz).
+# =============================================================================
+
+# Configuração de log reutilizada por todos os serviços — rotação para não
+# Estourar o disco enquanto o container fica de pé por muito tempo.
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — banco principal + banco de testes (criado por script no init)
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    container_name: esporte_mais_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-esporte}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-esporte}
+      POSTGRES_DB: ${POSTGRES_DB:-esporte_mais}
+    ports:
+      - "5432:5432"
+    volumes:
+      - esporte_mais_pgdata:/var/lib/postgresql/data
+    networks:
+      - esporte_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-esporte} -d ${POSTGRES_DB:-esporte_mais}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Mailpit — captura os e-mails enviados pelo backend em dev (Decisão D4).
+  # UI em http://localhost:8025; SMTP em mailpit:1025 (visível só na rede interna).
+  # ---------------------------------------------------------------------------
+  mailpit:
+    image: axllent/mailpit
+    container_name: esporte_mais_mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+    networks:
+      - esporte_net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8025"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Backend — FastAPI com hot-reload. O entrypoint (docker-entrypoint.sh)
+  # Roda `alembic upgrade head` + seed do Gestor inicial antes de subir a API.
+  # ---------------------------------------------------------------------------
+  backend:
+    build:
+      context: ./backend
+    image: esporte_mais_backend:dev
+    container_name: esporte_mais_backend
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+    environment:
+      DATABASE_URL: postgresql+psycopg://${POSTGRES_USER:-esporte}:${POSTGRES_PASSWORD:-esporte}@db:5432/${POSTGRES_DB:-esporte_mais}
+      JWT_SECRET: ${JWT_SECRET:-troque-por-um-segredo-aleatorio-em-producao}
+      JWT_ALGORITHM: HS256
+      ACCESS_TOKEN_EXPIRE_MINUTES: 30
+      REFRESH_TOKEN_EXPIRE_DAYS: 7
+      RESET_TOKEN_EXPIRE_MINUTES: 60
+      LOGIN_MAX_TENTATIVAS: 5
+      LOGIN_BLOQUEIO_MINUTOS: 15
+      MAIL_MODE: ${MAIL_MODE:-smtp}
+      SMTP_HOST: ${SMTP_HOST:-mailpit}
+      SMTP_PORT: ${SMTP_PORT:-1025}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMTP_FROM: ${SMTP_FROM:-no-reply@esportemais.local}
+      SMTP_TLS: ${SMTP_TLS:-false}
+      GESTOR_INICIAL_NOME: ${GESTOR_INICIAL_NOME:-Gestor Inicial}
+      GESTOR_INICIAL_CPF: ${GESTOR_INICIAL_CPF:-00000000000}
+      GESTOR_INICIAL_EMAIL: ${GESTOR_INICIAL_EMAIL:-gestor@esportemais.local}
+      GESTOR_INICIAL_SENHA: ${GESTOR_INICIAL_SENHA:-Admin@2026}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      TIMEZONE: ${TIMEZONE:-America/Sao_Paulo}
+      SCHEDULER_ENABLED: "true"
+      CONCLUIR_AGENDAMENTOS_INTERVALO_MINUTOS: 5
+      # Watchfiles usa polling em bind mounts do Docker Desktop (Windows/macOS)
+      WATCHFILES_FORCE_POLLING: "true"
+    volumes:
+      # Hot-reload: o uvicorn --reload enxerga alterações em ./backend/app,
+      # ./backend/alembic e ./backend/scripts imediatamente.
+      - ./backend/app:/app/app
+      - ./backend/alembic:/app/alembic
+      - ./backend/scripts:/app/scripts
+      - ./backend/alembic.ini:/app/alembic.ini
+    ports:
+      - "8000:8000"
+    networks:
+      - esporte_net
+    # Sobrescreve o CMD do Dockerfile para incluir --reload e log-level info
+    # (o entrypoint faz migrations + seed antes de exec deste comando).
+    command:
+      - uvicorn
+      - app.main:app
+      - --host
+      - 0.0.0.0
+      - --port
+      - "8000"
+      - --reload
+      - --reload-dir
+      - /app/app
+      - --log-level
+      - info
+      - --access-log
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8000/health').status==200 else 1)\""]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # Frontend — Vite dev server com HMR. Código montado por bind mount;
+  # Node_modules do container preservado por volume anônimo.
+  # ---------------------------------------------------------------------------
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    image: esporte_mais_frontend:dev
+    container_name: esporte_mais_frontend
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    environment:
+      # A URL da API é resolvida PELO BROWSER — usa localhost (mapeamento do host)
+      VITE_API_URL: ${VITE_API_URL:-http://localhost:8000}
+      # Redundância defensiva para hot-reload em bind mounts (o principal está no vite.config.js)
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      # Bind mount do código; node_modules fica no volume anônimo do container
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    networks:
+      - esporte_net
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5173"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    logging: *default-logging
+
+  # ---------------------------------------------------------------------------
+  # pgAdmin (opcional) — só sobe com `docker compose --profile tools up`.
+  # Conecte usando: host=db  port=5432  user=esporte  password=esporte
+  # ---------------------------------------------------------------------------
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: esporte_mais_pgadmin
+    restart: unless-stopped
+    profiles: ["tools"]
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@esportemais.local}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+      PGADMIN_CONFIG_MASTER_PASSWORD_REQUIRED: "False"
+    ports:
+      - "5050:80"
+    volumes:
+      - esporte_mais_pgadmin:/var/lib/pgadmin
+    networks:
+      - esporte_net
+    logging: *default-logging
+
+networks:
+  esporte_net:
+    name: esporte_mais_net
+    driver: bridge
+
+volumes:
+  esporte_mais_pgdata:
+  esporte_mais_pgadmin:

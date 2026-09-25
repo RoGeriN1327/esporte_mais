@@ -1,0 +1,76 @@
+from contextlib import asynccontextmanager
+
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+
+from app.controllers.admin_controller import router as admin_router
+from app.controllers.agendamento_admin_controller import router as agendamento_admin_router
+from app.controllers.agendamento_controller import router as agendamento_router
+from app.controllers.auth_controller import router as auth_router
+from app.controllers.configuracao_controller import router as configuracao_router
+from app.controllers.quadra_admin_controller import router as quadra_admin_router
+from app.controllers.quadra_controller import router as quadra_router
+from app.controllers.usuario_controller import router as usuario_router
+from app.core.config import settings
+from app.core.rate_limit import limiter
+from app.core.scheduler import criar_scheduler
+from app.exceptions import ErroDeDominio
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
+    scheduler = criar_scheduler() if settings.SCHEDULER_ENABLED else None
+    if scheduler is not None:
+        scheduler.start()
+    yield
+    if scheduler is not None:
+        scheduler.shutdown(wait=False)
+
+app = FastAPI(
+    title="Esporte+ API",
+    description="API do sistema de agendamento de quadras esportivas públicas da "
+    "Secretaria Municipal de Esportes de Rio Verde - GO. "
+    "Módulos: Autenticação e Gestão de Usuários, "
+    "Agendamentos e Gestão de Quadras/Painel.",
+    version="0.3.0",
+    lifespan=lifespan,
+)
+
+app.state.limiter = limiter
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[settings.FRONTEND_URL],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+@app.exception_handler(ErroDeDominio)
+async def tratar_erro_de_dominio(request: Request, exc: ErroDeDominio) -> JSONResponse:
+    headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None
+    return JSONResponse(
+        status_code=exc.status_code, content={"detail": exc.mensagem}, headers=headers
+    )
+
+@app.exception_handler(RateLimitExceeded)
+async def tratar_rate_limit(request: Request, exc: RateLimitExceeded) -> JSONResponse:
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "Muitas requisições. Aguarde um instante e tente novamente."},
+    )
+
+app.include_router(auth_router)
+app.include_router(usuario_router)
+app.include_router(admin_router)
+app.include_router(quadra_router)
+app.include_router(agendamento_router)
+app.include_router(configuracao_router)
+app.include_router(quadra_admin_router)
+app.include_router(agendamento_admin_router)
+
+@app.get("/health", tags=["Infraestrutura"], summary="Verificação de saúde da API")
+def health_check() -> dict[str, str]:
+    return {"status": "ok"}

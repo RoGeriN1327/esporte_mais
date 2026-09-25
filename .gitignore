@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+node_modules/
+dist/
+
+# Arquivos locais (docs, PDFs, imagens) que nao devem subir ao repo
+_local/
+
+# IDE / Claude
+.claude/
+.idea/
+.vscode/
+
+# Sistema
+Thumbs.db
+.DS_Store

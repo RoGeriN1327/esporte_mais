@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+alembic
+psycopg[binary]
+pydantic-settings
+pydantic[email]
+bcrypt
+PyJWT
+python-multipart
+slowapi
+apscheduler
+tzdata
+pytest
+httpx
