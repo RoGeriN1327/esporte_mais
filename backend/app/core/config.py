@@ -54,6 +54,7 @@ class Settings(BaseSettings):
 
     # Origem liberada no CORS e base dos links enviados por e-mail
     FRONTEND_URL: str = "http://localhost:5173"
+    DOCS_ENABLED: bool = True
 
     @field_validator("DATABASE_URL")
     @classmethod

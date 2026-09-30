@@ -1,6 +1,7 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Request, status
 
 from app.core.deps import PessoaLogada, SessaoDb
+from app.core.rate_limit import limiter
 from app.schemas.auth import MensagemResponse
 from app.schemas.usuario import EmailUpdate, UsuarioPessoaCreate, UsuarioPessoaOut
 from app.services.usuario_service import UsuarioService
@@ -17,7 +18,10 @@ router = APIRouter(prefix="/usuarios", tags=["Usuários Pessoa"])
     "caracteres, com confirmação). CPF e e-mail únicos em todo o sistema. "
     "Conta criada com status Ativo.",
 )
-def cadastrar_usuario(dados: UsuarioPessoaCreate, db: SessaoDb) -> UsuarioPessoaOut:
+@limiter.limit("5/hour")
+def cadastrar_usuario(
+    request: Request, dados: UsuarioPessoaCreate, db: SessaoDb
+) -> UsuarioPessoaOut:
     return UsuarioService(db).cadastrar(dados)
 
 

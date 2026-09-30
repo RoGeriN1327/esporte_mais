@@ -2,6 +2,7 @@
 
 Regras verificadas:
   * cadastro público com CPF e e-mail únicos em TODO o sistema (pessoas e administradores);
+  * rate limit de 5 cadastros por hora por IP;
   * senha armazenada apenas como hash; conta criada como Ativa;
   * o cidadão só altera o próprio e-mail (nome e CPF são imutáveis por ele);
   * ao desativar a própria conta: sessões encerradas, agendamentos confirmados
@@ -12,6 +13,7 @@ import pytest
 from sqlalchemy import select
 
 from app.core import security
+from app.core.rate_limit import limiter
 from app.models import StatusAgendamento, StatusUsuario, UsuarioPessoa
 from tests.fabricas import (
     AMANHA,
@@ -94,6 +96,19 @@ class TestAutoCadastro:
         for dados in invalidos:
             assert client.post("/usuarios", json=_cadastro(**dados)).status_code == 422, dados
         assert db.scalars(select(UsuarioPessoa)).all() == []
+
+    def test_mais_de_5_cadastros_por_hora_do_mesmo_ip_retorna_429(self, client, db):
+        limiter.enabled = True
+        limiter.reset()
+        respostas = [
+            client.post(
+                "/usuarios",
+                json=_cadastro(cpf=gerar_cpf(100 + i), email=f"pessoa{i}@teste.com"),
+            ).status_code
+            for i in range(6)
+        ]
+        assert respostas[:5] == [201] * 5
+        assert respostas[5] == 429
 
 
 def test_meu_perfil_exibe_somente_os_dados_do_usuario_autenticado(client, db):

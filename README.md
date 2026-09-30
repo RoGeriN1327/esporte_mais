@@ -109,6 +109,7 @@ A lista completa, com descrição de cada uma, está em `backend/app/core/config
 | `FRONTEND_URL`  | sim* | URL pública do frontend, ex.: `https://esportemais.vercel.app` (libera o CORS e monta os links dos e-mails). *O padrão é localhost, o que quebra o CORS em produção. |
 | `MAIL_MODE`     | — | `smtp`, com `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM`, `SMTP_TLS=true` |
 | `TIMEZONE`      | — | `America/Sao_Paulo` (padrão) |
+| `DOCS_ENABLED`  | — | `false` — tira do ar `/docs`, `/redoc` e `/openapi.json` (padrão `true`, para o desenvolvimento) |
 | `PORT`          | — | Definida pela própria hospedagem; local usa 8000 |
 | `GESTOR_INICIAL_*` | só no 1º deploy | Ver "Primeiro Gestor em produção" abaixo |
 
