@@ -4,7 +4,8 @@ import { useForm } from 'react-hook-form'
 
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
-import { Alerta, Badge, Botao, Campo, Carregando, Modal, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
 
 export default function UsuariosAdminPage() {
@@ -105,7 +106,7 @@ export default function UsuariosAdminPage() {
         </div>
       )}
 
-      {}
+      {/* Modal: Cadastrar usuário */}
       <Modal aberto={modal?.modo === 'novo'} titulo="Cadastrar usuário" onFechar={() => setModal(null)}>
         <form className="space-y-4" onSubmit={handleSubmit((dados) => cadastrar.mutate(dados))} noValidate>
           <Campo label="Nome Completo" erro={errors.nome?.message}>
@@ -152,12 +153,12 @@ export default function UsuariosAdminPage() {
         </form>
       </Modal>
 
-      {}
+      {/* Modal: Desativar usuário */}
       <Modal aberto={modal?.modo === 'desativar'} titulo="Desativar usuário" onFechar={() => setModal(null)}>
         {modal?.usuario && (
           <div className="space-y-4">
             <Alerta tipo="aviso">
-              Os agendamentos com status "Confirmado" deste usuário serão cancelados
+              Os agendamentos com status “Confirmado” deste usuário serão cancelados
               automaticamente e ele será notificado por e-mail.
             </Alerta>
             <p className="text-sm text-gray-600">
@@ -180,7 +181,7 @@ export default function UsuariosAdminPage() {
         )}
       </Modal>
 
-      {}
+      {/* Modal: Reativar usuário */}
       <Modal aberto={modal?.modo === 'reativar'} titulo="Reativar usuário" onFechar={() => setModal(null)}>
         {modal?.usuario && (
           <div className="space-y-4">

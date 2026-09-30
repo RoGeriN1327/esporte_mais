@@ -46,14 +46,6 @@ export function Campo({ label, erro, children }) {
   )
 }
 
-export function classesDeInput(temErro) {
-  return `w-full rounded-lg border px-3 py-2 text-sm outline-none transition focus:ring-2 ${
-    temErro
-      ? 'border-red-500 focus:border-red-500 focus:ring-red-200'
-      : 'border-gray-300 focus:border-emerald-500 focus:ring-emerald-200'
-  }`
-}
-
 export function Alerta({ tipo = 'erro', children }) {
   if (!children) return null
   const estilos = {

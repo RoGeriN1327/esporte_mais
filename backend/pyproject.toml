@@ -1,0 +1,49 @@
+# Configuração das ferramentas de verificação do backend Esporte+:
+#   * pytest   — testes unitários e de integração (tests/)
+#   * coverage — cobertura de código (pytest --cov)
+#   * ruff     — análise estática (lint, estilo, bugs prováveis e segurança)
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --strict-markers"
+# Qualquer aviso (depreciação, chave fraca etc.) reprova a execução.
+filterwarnings = ["error"]
+markers = [
+    "unitario: teste unitário (sem banco de dados, sem HTTP)",
+    "integracao: teste de integração (API + PostgreSQL real)",
+]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = false
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+extend-exclude = ["alembic/versions"]
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle — erros de estilo (PEP 8)
+    "W",    # pycodestyle — avisos de estilo
+    "F",    # pyflakes — imports/variáveis não usados, nomes indefinidos
+    "I",    # isort — ordenação de imports
+    "B",    # flake8-bugbear — padrões propensos a bugs
+    "UP",   # pyupgrade — sintaxe moderna do Python
+    "S",    # flake8-bandit — problemas de segurança
+    "SIM",  # flake8-simplify — código simplificável
+    "C4",   # flake8-comprehensions — comprehensions desnecessárias
+    "DTZ",  # flake8-datetimez — datetimes sem fuso horário
+]
+
+[tool.ruff.lint.isort]
+# A pasta local "alembic/" (migrations) tem o mesmo nome do pacote instalado.
+known-third-party = ["alembic"]
+
+[tool.ruff.lint.per-file-ignores]
+# Nos testes, assert é o mecanismo de verificação e senhas fixas são dados de teste.
+"tests/**" = ["S101", "S105", "S106"]

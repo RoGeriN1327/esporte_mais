@@ -3,7 +3,8 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session, joinedload
 
-from app.models import Agendamento, StatusAgendamento
+from app.models import Agendamento, Quadra, StatusAgendamento, UsuarioPessoa
+
 
 class AgendamentoRepository:
     def __init__(self, db: Session) -> None:
@@ -48,8 +49,6 @@ class AgendamentoRepository:
         esporte: str | None = None,
         status: StatusAgendamento | None = None,
     ) -> list[Agendamento]:
-        from app.models import Quadra
-
         consulta = (
             select(Agendamento)
             .join(Agendamento.quadra)
@@ -130,8 +129,6 @@ class AgendamentoRepository:
         cpf_usuario: str | None = None,
         nome_usuario: str | None = None,
     ) -> list[Agendamento]:
-        from app.models import Quadra, UsuarioPessoa
-
         consulta = (
             select(Agendamento)
             .join(Agendamento.quadra)
@@ -176,6 +173,7 @@ class AgendamentoRepository:
         )
 
     def concluir_vencidos(self, agora: datetime) -> int:
+        """Marca como Concluído todo confirmado cujo horário já terminou."""
         resultado = self.db.execute(
             update(Agendamento)
             .where(

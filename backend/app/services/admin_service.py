@@ -1,3 +1,7 @@
+"""Gestão de usuários pela administração: administradores (só Gestor) e
+cidadãos (Gestor e Operador).
+"""
+
 from sqlalchemy.orm import Session
 
 from app.core import security
@@ -10,12 +14,14 @@ from app.repositories import (
     UsuarioPessoaRepository,
 )
 from app.schemas.admin import AdministradorCreate, AdministradorUpdate, UsuarioPessoaAdminCreate
+from app.services.agendamento_service import AgendamentoService
 from app.services.email_service import EmailService
 from app.services.usuario_service import UsuarioService
 
 MSG_ADMIN_NAO_ENCONTRADO = "Administrador não encontrado."
 MSG_USUARIO_NAO_ENCONTRADO = "Usuário não encontrado."
 MSG_AUTO_DESATIVACAO = "Auto desativação administrativa não é permitida."
+
 
 class AdminService:
     def __init__(self, db: Session, email_service: EmailService | None = None) -> None:
@@ -24,8 +30,9 @@ class AdminService:
         self.admins = UsuarioAdministrativoRepository(db)
         self.tokens = TokenRepository(db)
         self.emails = email_service or EmailService(db)
-
         self._usuarios = UsuarioService(db, email_service=self.emails)
+
+    # --- Administradores ----------------------------------------------------
 
     def listar_administradores(self) -> list[UsuarioAdministrativo]:
         return self.admins.listar()
@@ -41,7 +48,6 @@ class AdminService:
             perfil=dados.perfil,
         )
         self.db.commit()
-
         self.emails.enviar_boas_vindas_administrador(
             nome=admin.nome,
             email=admin.email,
@@ -75,9 +81,10 @@ class AdminService:
         if admin is None:
             raise RecursoNaoEncontrado(MSG_ADMIN_NAO_ENCONTRADO)
         self.admins.atualizar(admin, status=StatusUsuario.DESATIVADO)
-
         self.tokens.revogar_todos_refresh_do_usuario(TipoUsuario.ADMINISTRATIVO, admin.id)
         self.db.commit()
+
+    # --- Usuários Pessoa (cidadãos) -----------------------------------------
 
     def listar_usuarios_pessoa(self) -> list[UsuarioPessoa]:
         return self.pessoas.listar()
@@ -92,13 +99,10 @@ class AdminService:
             senha_hash=security.gerar_hash_senha(senha),
         )
         self.db.commit()
-
         self.emails.enviar_boas_vindas_pessoa(nome=usuario.nome, email=usuario.email, senha=senha)
         return usuario
 
     def desativar_usuario_pessoa(self, usuario_id: int) -> None:
-        from app.services.agendamento_service import AgendamentoService
-
         usuario = self.pessoas.obter_por_id(usuario_id)
         if usuario is None:
             raise RecursoNaoEncontrado(MSG_USUARIO_NAO_ENCONTRADO)
@@ -116,7 +120,6 @@ class AdminService:
         usuario = self.pessoas.obter_por_id(usuario_id)
         if usuario is None:
             raise RecursoNaoEncontrado(MSG_USUARIO_NAO_ENCONTRADO)
-
         self.pessoas.atualizar(
             usuario, status=StatusUsuario.ATIVO, tentativas_login=0, bloqueado_ate=None
         )

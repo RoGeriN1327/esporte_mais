@@ -4,7 +4,8 @@ import { Link, useNavigate } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
 import * as usuariosApi from '../../api/usuarios.api'
-import { Alerta, Botao, Campo, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Botao, Campo } from '../../components/ui'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
 import CartaoAuth from './CartaoAuth'
 
@@ -25,7 +26,6 @@ export default function CadastroPage() {
         senha: dados.senha,
         confirmarSenha: dados.confirmarSenha,
       })
-
       navigate('/login', { state: { mensagem: 'Conta criada com sucesso! Faça login para continuar.' } })
     } catch (excecao) {
       setErro(mensagemDeErro(excecao))

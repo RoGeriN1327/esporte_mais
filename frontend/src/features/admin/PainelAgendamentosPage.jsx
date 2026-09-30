@@ -4,7 +4,8 @@ import { useState } from 'react'
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
 import SeletorDataHorario from '../../components/SeletorDataHorario'
-import { Alerta, Badge, Botao, Campo, Carregando, Modal, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
 import { cpfValido, mascararCpf, somenteDigitos } from '../../utils/cpf'
 import { formatarData, formatarHora } from '../../utils/datas'
 
@@ -97,7 +98,7 @@ export default function PainelAgendamentosPage() {
         <Botao onClick={() => abrirModal({ modo: 'novo' })}>Novo agendamento</Botao>
       </div>
 
-      {}
+      {/* Filtros */}
       <form
         className="grid gap-4 rounded-xl bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-6"
         onSubmit={(evento) => {
@@ -226,7 +227,7 @@ export default function PainelAgendamentosPage() {
         </div>
       )}
 
-      {}
+      {/* Modal: Novo agendamento */}
       <Modal aberto={modal?.modo === 'novo'} titulo="Novo agendamento" onFechar={() => setModal(null)}>
         <div className="space-y-4">
           <Campo label="CPF do cidadão">
@@ -281,7 +282,7 @@ export default function PainelAgendamentosPage() {
         </div>
       </Modal>
 
-      {}
+      {/* Modal: Remarcar agendamento */}
       <Modal aberto={modal?.modo === 'remarcar'} titulo="Remarcar agendamento" onFechar={() => setModal(null)}>
         {modal?.agendamento && (
           <div className="space-y-4">
@@ -315,7 +316,7 @@ export default function PainelAgendamentosPage() {
         )}
       </Modal>
 
-      {}
+      {/* Modal: Cancelar agendamento */}
       <Modal aberto={modal?.modo === 'cancelar'} titulo="Cancelar agendamento" onFechar={() => setModal(null)}>
         {modal?.agendamento && (
           <div className="space-y-4">

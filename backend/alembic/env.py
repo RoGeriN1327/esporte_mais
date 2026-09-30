@@ -3,7 +3,9 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import engine_from_config, pool
 
-import app.models
+# Import necessário pelo efeito colateral: registra todos os models em Base.metadata,
+# que o Alembic usa como referência (target_metadata) para gerar migrations.
+import app.models  # noqa: F401
 from app.core.config import settings
 from app.core.database import Base
 
@@ -16,6 +18,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
+
 def run_migrations_offline() -> None:
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
@@ -27,6 +30,7 @@ def run_migrations_offline() -> None:
     )
     with context.begin_transaction():
         context.run_migrations()
+
 
 def run_migrations_online() -> None:
     connectable = engine_from_config(
@@ -43,6 +47,7 @@ def run_migrations_online() -> None:
         with context.begin_transaction():
             context.run_migrations()
     connectable.dispose()
+
 
 if context.is_offline_mode():
     run_migrations_offline()

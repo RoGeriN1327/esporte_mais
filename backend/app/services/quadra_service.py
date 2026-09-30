@@ -1,3 +1,9 @@
+"""Quadras: consulta pelos cidadãos, cálculo de horários livres e gestão (admin).
+
+A grade de cada quadra é uma lista de faixas por dia da semana (ex.: seg 08:00-12:00);
+os horários agendáveis são slots de 1 hora gerados a partir dessas faixas.
+"""
+
 from datetime import date, time, timedelta
 
 from sqlalchemy.orm import Session
@@ -12,6 +18,7 @@ DURACAO_SLOT = timedelta(hours=1)
 
 MSG_QUADRA_NAO_ENCONTRADA = "Quadra não encontrada."
 MSG_DATA_PASSADA = "A data deve ser a partir de hoje."
+
 
 class QuadraService:
     def __init__(self, db: Session) -> None:
@@ -37,11 +44,11 @@ class QuadraService:
     def obter_quadra_ativa(self, quadra_id: int) -> Quadra:
         quadra = self.quadras.obter_por_id(quadra_id)
         if quadra is None or quadra.status is not StatusQuadra.ATIVA:
-
             raise RecursoNaoEncontrado(MSG_QUADRA_NAO_ENCONTRADA)
         return quadra
 
     def slots_da_grade(self, quadra_id: int, dia: date) -> list[time]:
+        """Todos os inícios de slot da grade no dia, ocupados ou não."""
         slots: list[time] = []
         for faixa in self.quadras.faixas_do_dia(quadra_id, dia.weekday()):
             inicio = tempo.combinar(dia, faixa.hora_inicio)
@@ -52,6 +59,7 @@ class QuadraService:
         return sorted(set(slots))
 
     def horarios_disponiveis(self, quadra_id: int, dia: date) -> list[time]:
+        """Slots da grade que ainda não começaram e não têm agendamento confirmado."""
         self.obter_quadra_ativa(quadra_id)
         if dia < tempo.hoje_local():
             raise RegraDeNegocioViolada(MSG_DATA_PASSADA)
@@ -71,6 +79,8 @@ class QuadraService:
             if slot not in ocupados and tempo.combinar(dia, slot) > agora
         ]
 
+    # --- Gestão (administração) ---------------------------------------------
+
     def _obter_para_gestao(self, quadra_id: int) -> Quadra:
         quadra = self.quadras.obter_por_id(quadra_id)
         if quadra is None:
@@ -87,6 +97,7 @@ class QuadraService:
         return self.quadras.listar_todas(esporte=esporte, nome=nome, bairro=bairro)
 
     def cadastrar(self, dados: QuadraAdminCreate) -> list[Quadra]:
+        """Cria um registro de quadra por esporte selecionado, com a mesma grade."""
         faixas = [(f.dia_semana, f.hora_inicio, f.hora_fim) for f in dados.faixas]
         criadas = [
             self.quadras.criar(

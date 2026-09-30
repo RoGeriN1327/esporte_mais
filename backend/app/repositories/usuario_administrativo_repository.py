@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app.models import PerfilAdministrativo, StatusUsuario, UsuarioAdministrativo
 
+
 class UsuarioAdministrativoRepository:
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -16,9 +17,7 @@ class UsuarioAdministrativoRepository:
         )
 
     def obter_por_cpf(self, cpf: str) -> UsuarioAdministrativo | None:
-        return self.db.scalar(
-            select(UsuarioAdministrativo).where(UsuarioAdministrativo.cpf == cpf)
-        )
+        return self.db.scalar(select(UsuarioAdministrativo).where(UsuarioAdministrativo.cpf == cpf))
 
     def listar(self) -> list[UsuarioAdministrativo]:
         return list(

@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import * as authApi from '../api/auth.api'
 import api, {
@@ -7,56 +7,56 @@ import api, {
   definirAccessToken,
   registrarSessaoExpirada,
 } from '../api/client'
-
-const AuthContext = createContext(null)
+import { AuthContext } from './useAuth'
 
 export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
-  const [carregando, setCarregando] = useState(true)
+  // Só há o que carregar se existir uma sessão salva para renovar.
+  const [carregando, setCarregando] = useState(() => localStorage.getItem(CHAVE_REFRESH) !== null)
 
-  function guardarSessao(dados) {
+  const guardarSessao = useCallback((dados) => {
     localStorage.setItem(CHAVE_REFRESH, dados.refresh_token)
     localStorage.setItem(CHAVE_USUARIO, JSON.stringify(dados.usuario))
     definirAccessToken(dados.access_token)
     setUsuario(dados.usuario)
-  }
+  }, [])
 
-  function limparSessao() {
+  const limparSessao = useCallback(() => {
     localStorage.removeItem(CHAVE_REFRESH)
     localStorage.removeItem(CHAVE_USUARIO)
     definirAccessToken(null)
     setUsuario(null)
-  }
+  }, [])
 
   useEffect(() => {
     registrarSessaoExpirada(() => setUsuario(null))
     const refresh = localStorage.getItem(CHAVE_REFRESH)
-    if (!refresh) {
-      setCarregando(false)
-      return
-    }
+    if (!refresh) return
     api
       .post('/auth/refresh', { refresh_token: refresh })
       .then(({ data }) => guardarSessao(data))
       .catch(() => limparSessao())
       .finally(() => setCarregando(false))
-  }, [])
+  }, [guardarSessao, limparSessao])
 
-  async function login(email, senha) {
-    const dados = await authApi.login(email, senha)
-    guardarSessao(dados)
-    return dados.usuario
-  }
+  const login = useCallback(
+    async (email, senha) => {
+      const dados = await authApi.login(email, senha)
+      guardarSessao(dados)
+      return dados.usuario
+    },
+    [guardarSessao],
+  )
 
-  async function logout() {
+  const logout = useCallback(async () => {
     const refresh = localStorage.getItem(CHAVE_REFRESH)
     try {
       if (refresh) await authApi.logout(refresh)
     } catch {
-
+      // Falha no logout remoto (rede, sessão já expirada) não impede encerrar a sessão local.
     }
     limparSessao()
-  }
+  }, [limparSessao])
 
   const valor = useMemo(
     () => ({
@@ -69,12 +69,8 @@ export function AuthProvider({ children }) {
       logout,
       limparSessao,
     }),
-    [usuario, carregando],
+    [usuario, carregando, login, logout, limparSessao],
   )
 
   return <AuthContext.Provider value={valor}>{children}</AuthContext.Provider>
-}
-
-export function useAuth() {
-  return useContext(AuthContext)
 }

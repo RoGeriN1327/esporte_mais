@@ -2,6 +2,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Configuracao
 
+
 class ConfiguracaoRepository:
     def __init__(self, db: Session) -> None:
         self.db = db

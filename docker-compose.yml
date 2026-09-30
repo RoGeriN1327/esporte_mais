@@ -26,12 +26,12 @@
 #   pgAdmin  (perfil tools) http://localhost:5050   (admin@esportemais.local / admin)
 #   Postgres                localhost:5432
 #
-# Login inicial: gestor@esportemais.local / Admin@2026
-# (troque em produção via variáveis GESTOR_INICIAL_* no .env da raiz).
+# Login inicial LOCAL: valores GESTOR_INICIAL_* abaixo (somente desenvolvimento).
+# Em produção o compose não é usado; ver "Primeiro Gestor em produção" no README.
 # =============================================================================
 
 # Configuração de log reutilizada por todos os serviços — rotação para não
-# Estourar o disco enquanto o container fica de pé por muito tempo.
+# estourar o disco enquanto o container fica de pé por muito tempo.
 x-logging: &default-logging
   driver: json-file
   options:
@@ -64,7 +64,7 @@ services:
     logging: *default-logging
 
   # ---------------------------------------------------------------------------
-  # Mailpit — captura os e-mails enviados pelo backend em dev (Decisão D4).
+  # Mailpit — captura os e-mails enviados pelo backend em desenvolvimento.
   # UI em http://localhost:8025; SMTP em mailpit:1025 (visível só na rede interna).
   # ---------------------------------------------------------------------------
   mailpit:
@@ -85,11 +85,13 @@ services:
 
   # ---------------------------------------------------------------------------
   # Backend — FastAPI com hot-reload. O entrypoint (docker-entrypoint.sh)
-  # Roda `alembic upgrade head` + seed do Gestor inicial antes de subir a API.
+  # roda `alembic upgrade head` + seed do Gestor inicial antes de subir a API.
   # ---------------------------------------------------------------------------
   backend:
     build:
       context: ./backend
+      args:
+        REQUIREMENTS: requirements-dev.txt
     image: esporte_mais_backend:dev
     container_name: esporte_mais_backend
     restart: unless-stopped
@@ -115,14 +117,14 @@ services:
       SMTP_FROM: ${SMTP_FROM:-no-reply@esportemais.local}
       SMTP_TLS: ${SMTP_TLS:-false}
       GESTOR_INICIAL_NOME: ${GESTOR_INICIAL_NOME:-Gestor Inicial}
-      GESTOR_INICIAL_CPF: ${GESTOR_INICIAL_CPF:-00000000000}
+      GESTOR_INICIAL_CPF: ${GESTOR_INICIAL_CPF:-52998224725}
       GESTOR_INICIAL_EMAIL: ${GESTOR_INICIAL_EMAIL:-gestor@esportemais.local}
       GESTOR_INICIAL_SENHA: ${GESTOR_INICIAL_SENHA:-Admin@2026}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
       TIMEZONE: ${TIMEZONE:-America/Sao_Paulo}
       SCHEDULER_ENABLED: "true"
       CONCLUIR_AGENDAMENTOS_INTERVALO_MINUTOS: 5
-      # Watchfiles usa polling em bind mounts do Docker Desktop (Windows/macOS)
+      # watchfiles usa polling em bind mounts do Docker Desktop (Windows/macOS)
       WATCHFILES_FORCE_POLLING: "true"
     volumes:
       # Hot-reload: o uvicorn --reload enxerga alterações em ./backend/app,
@@ -131,6 +133,11 @@ services:
       - ./backend/alembic:/app/alembic
       - ./backend/scripts:/app/scripts
       - ./backend/alembic.ini:/app/alembic.ini
+      # Testes e análise estática (docker compose exec backend pytest / ruff);
+      # relatorios/ recebe os relatórios gerados (ignorado pelo git)
+      - ./backend/tests:/app/tests
+      - ./backend/pyproject.toml:/app/pyproject.toml
+      - ./backend/relatorios:/app/relatorios
     ports:
       - "8000:8000"
     networks:
@@ -160,7 +167,7 @@ services:
 
   # ---------------------------------------------------------------------------
   # Frontend — Vite dev server com HMR. Código montado por bind mount;
-  # Node_modules do container preservado por volume anônimo.
+  # node_modules do container preservado por volume anônimo.
   # ---------------------------------------------------------------------------
   frontend:
     build:
@@ -186,7 +193,8 @@ services:
     networks:
       - esporte_net
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:5173"]
+      # 127.0.0.1 (não localhost): no Alpine localhost resolve para ::1 e o Vite escuta só IPv4
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:5173"]
       interval: 15s
       timeout: 5s
       retries: 5

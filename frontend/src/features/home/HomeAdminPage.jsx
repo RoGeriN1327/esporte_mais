@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 
 import * as adminApi from '../../api/admin.api'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../contexts/useAuth'
 import { hojeISO } from '../../utils/datas'
 
 function saudacao() {
@@ -103,13 +103,13 @@ const Icone = {
       <path d="M12 6v6l4 2" />
     </svg>
   ),
-  troféu: (
+  trofeu: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
       <path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4z" />
       <path d="M17 4h3v2a3 3 0 0 1-3 3M7 4H4v2a3 3 0 0 0 3 3" />
     </svg>
   ),
-  time: (
+  pessoas: (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
       <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
       <circle cx="9" cy="7" r="4" />
@@ -144,7 +144,6 @@ export default function HomeAdminPage() {
 
   return (
     <div className="space-y-8">
-      {}
       <div className="rounded-xl bg-gradient-to-r from-emerald-700 to-emerald-800 p-6 text-white shadow">
         <h1 className="text-2xl font-bold sm:text-3xl">
           {saudacao()}, {usuario?.nome?.split(' ')[0] || 'admin'}
@@ -154,7 +153,6 @@ export default function HomeAdminPage() {
         </p>
       </div>
 
-      {}
       <div className="grid gap-4 sm:grid-cols-3">
         <CartaoMetrica
           titulo="Agendamentos hoje"
@@ -168,18 +166,17 @@ export default function HomeAdminPage() {
           valor={quadrasAtivas}
           sublinha={`${totalQuadras} cadastrada(s)`}
           corIcone="bg-blue-100 text-blue-700"
-          icone={Icone.troféu}
+          icone={Icone.trofeu}
         />
         <CartaoMetrica
           titulo="Usuários ativos"
           valor={usuariosAtivos}
           sublinha={`${totalUsuarios} cadastrado(s)`}
           corIcone="bg-amber-100 text-amber-700"
-          icone={Icone.time}
+          icone={Icone.pessoas}
         />
       </div>
 
-      {}
       <Secao titulo="Operação">
         <CartaoAcao
           para="/admin/agendamentos"
@@ -189,7 +186,6 @@ export default function HomeAdminPage() {
         />
       </Secao>
 
-      {}
       <Secao titulo="Cadastros">
         <CartaoAcao
           para="/admin/quadras"
@@ -213,7 +209,6 @@ export default function HomeAdminPage() {
         )}
       </Secao>
 
-      {}
       {ehGestor && (
         <Secao titulo="Sistema">
           <CartaoAcao

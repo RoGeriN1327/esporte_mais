@@ -11,5 +11,3 @@ python-multipart
 slowapi
 apscheduler
 tzdata
-pytest
-httpx

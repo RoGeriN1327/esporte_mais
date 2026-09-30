@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.models import Quadra, QuadraFaixaHoraria, StatusQuadra
 
+
 class QuadraRepository:
     def __init__(self, db: Session) -> None:
         self.db = db

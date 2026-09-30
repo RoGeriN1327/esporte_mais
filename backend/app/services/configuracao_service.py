@@ -1,3 +1,8 @@
+"""Parâmetros ajustáveis pelo Gestor, guardados na tabela "configuracao".
+
+Enquanto o Gestor não altera um valor, vale o padrão definido aqui.
+"""
+
 from sqlalchemy.orm import Session
 
 from app.models import CHAVE_ANTECEDENCIA_CANCELAMENTO, CHAVE_ANTECEDENCIA_LEMBRETE
@@ -5,6 +10,7 @@ from app.repositories import ConfiguracaoRepository
 
 ANTECEDENCIA_PADRAO_HORAS = 2
 LEMBRETE_PADRAO_HORAS = 24
+
 
 class ConfiguracaoService:
     def __init__(self, db: Session) -> None:
@@ -20,11 +26,6 @@ class ConfiguracaoService:
 
     def obter_lembrete_antecedencia_horas(self) -> int:
         return self._obter_int(CHAVE_ANTECEDENCIA_LEMBRETE, LEMBRETE_PADRAO_HORAS)
-
-    def definir_antecedencia_cancelamento_horas(self, horas: int) -> int:
-        self.configuracoes.definir_valor(CHAVE_ANTECEDENCIA_CANCELAMENTO, str(horas))
-        self.db.commit()
-        return horas
 
     def obter_todas(self) -> dict[str, int]:
         return {

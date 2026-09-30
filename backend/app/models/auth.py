@@ -6,13 +6,19 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.core.database import Base
 from app.models.enums import TipoUsuario
 
+
 def _tipo_usuario_enum() -> Enum:
     return Enum(TipoUsuario, name="tipo_usuario", values_callable=lambda e: [m.value for m in e])
 
+
 class RefreshToken(Base):
+    """Sessão de login. Guarda só o hash do token; usuario_id aponta para a
+    tabela de pessoa ou de administrativo conforme tipo_usuario."""
 
     __tablename__ = "refresh_token"
-    __table_args__ = (Index("ix_refresh_token_tipo_usuario_usuario_id", "tipo_usuario", "usuario_id"),)
+    __table_args__ = (
+        Index("ix_refresh_token_tipo_usuario_usuario_id", "tipo_usuario", "usuario_id"),
+    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -26,7 +32,9 @@ class RefreshToken(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
+
 class TokenRevogado(Base):
+    """Denylist de access tokens (JWT) encerrados por logout antes de expirar."""
 
     __tablename__ = "token_revogado"
 
@@ -38,7 +46,9 @@ class TokenRevogado(Base):
         DateTime(timezone=True), nullable=False, server_default=func.now()
     )
 
+
 class TokenRedefinicaoSenha(Base):
+    """Link de "esqueci minha senha": uso único e com validade curta."""
 
     __tablename__ = "token_redefinicao_senha"
 

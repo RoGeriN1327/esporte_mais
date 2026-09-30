@@ -1,0 +1,9 @@
+# Dependências de desenvolvimento: testes automatizados e análise estática.
+# Instaladas na imagem de dev (docker-compose.yml usa REQUIREMENTS=requirements-dev.txt).
+-r requirements.txt
+pytest
+pytest-cov
+pytest-html
+httpx2
+time-machine
+ruff

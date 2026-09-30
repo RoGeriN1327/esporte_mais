@@ -5,7 +5,6 @@ from app.models.configuracao import (
     CHAVE_ANTECEDENCIA_LEMBRETE,
     Configuracao,
 )
-from app.models.notificacao import Notificacao
 from app.models.enums import (
     PerfilAdministrativo,
     StatusAgendamento,
@@ -13,6 +12,7 @@ from app.models.enums import (
     StatusUsuario,
     TipoUsuario,
 )
+from app.models.notificacao import Notificacao
 from app.models.quadra import Quadra, QuadraFaixaHoraria
 from app.models.usuario_administrativo import UsuarioAdministrativo
 from app.models.usuario_pessoa import UsuarioPessoa

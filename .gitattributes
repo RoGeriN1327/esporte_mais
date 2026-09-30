@@ -1,0 +1,8 @@
+# Normaliza quebras de linha para LF no repositório (evita diffs falsos
+# entre Windows e Linux e scripts .sh quebrados dentro dos containers).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.ico binary
+*.pdf binary

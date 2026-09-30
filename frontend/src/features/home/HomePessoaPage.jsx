@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 import * as agendamentosApi from '../../api/agendamentos.api'
 import { Badge, Carregando } from '../../components/ui'
-import { useAuth } from '../../contexts/AuthContext'
+import { useAuth } from '../../contexts/useAuth'
 import { formatarData, formatarHora } from '../../utils/datas'
 
 export default function HomePessoaPage() {
@@ -44,7 +44,6 @@ export default function HomePessoaPage() {
         )}
       </section>
 
-      {}
       <div className="grid gap-4 sm:grid-cols-2">
         <Link
           to="/quadras"

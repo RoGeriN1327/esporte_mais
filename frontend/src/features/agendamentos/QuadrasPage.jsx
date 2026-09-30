@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 import * as quadrasApi from '../../api/quadras.api'
-import { Botao, Campo, Carregando, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Botao, Campo, Carregando } from '../../components/ui'
 
 const FILTROS_VAZIOS = { esporte: '', nome: '', bairro: '' }
 
@@ -34,7 +35,7 @@ export default function QuadrasPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Agendar quadra</h1>
 
-      {}
+      {/* Filtros */}
       <form
         className="grid gap-4 rounded-xl bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-4"
         onSubmit={(evento) => {
@@ -94,7 +95,6 @@ export default function QuadrasPage() {
         </div>
       </form>
 
-      {}
       {isLoading ? (
         <Carregando />
       ) : (quadras || []).length === 0 ? (

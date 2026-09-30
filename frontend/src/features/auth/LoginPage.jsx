@@ -3,8 +3,9 @@ import { useForm } from 'react-hook-form'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
-import { Alerta, Botao, Campo, classesDeInput } from '../../components/ui'
-import { useAuth } from '../../contexts/AuthContext'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Botao, Campo } from '../../components/ui'
+import { useAuth } from '../../contexts/useAuth'
 import CartaoAuth from './CartaoAuth'
 
 export default function LoginPage() {
@@ -54,7 +55,6 @@ export default function LoginPage() {
         </Botao>
       </form>
       <div className="mt-4 flex flex-col gap-2 text-center text-sm">
-        {}
         <Link to="/cadastro" className="font-medium text-emerald-700 hover:underline">
           Criar uma conta
         </Link>

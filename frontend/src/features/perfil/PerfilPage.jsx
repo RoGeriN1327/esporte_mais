@@ -5,8 +5,9 @@ import { useNavigate } from 'react-router-dom'
 import * as agendamentosApi from '../../api/agendamentos.api'
 import { mensagemDeErro } from '../../api/client'
 import * as usuariosApi from '../../api/usuarios.api'
-import { Alerta, Botao, Campo, Carregando, Modal, classesDeInput } from '../../components/ui'
-import { useAuth } from '../../contexts/AuthContext'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Botao, Campo, Carregando, Modal } from '../../components/ui'
+import { useAuth } from '../../contexts/useAuth'
 import { mascararCpf } from '../../utils/cpf'
 
 export default function PerfilPage() {
@@ -65,7 +66,6 @@ export default function PerfilPage() {
       <h1 className="text-2xl font-bold text-gray-800">Meu perfil</h1>
 
       <div className="space-y-4 rounded-xl bg-white p-6 shadow">
-        {}
         <Campo label="Nome Completo">
           <input className={classesDeInput(false)} value={perfil?.nome || ''} disabled readOnly />
         </Campo>
@@ -89,7 +89,6 @@ export default function PerfilPage() {
         <Alerta tipo="sucesso">{mensagem}</Alerta>
         <Alerta tipo="erro">{erro}</Alerta>
 
-        {}
         <div className="flex flex-wrap gap-3">
           <Botao onClick={() => salvarEmail.mutate()} carregando={salvarEmail.isPending}>
             Salvar alterações
@@ -103,12 +102,12 @@ export default function PerfilPage() {
         </div>
       </div>
 
-      {}
+      {/* Modal: Desativar conta */}
       <Modal aberto={modalAberto} titulo="Desativar conta" onFechar={() => setModalAberto(false)}>
         <div className="space-y-4">
           {temConfirmado && (
             <Alerta tipo="aviso">
-              Você possui agendamento com status "Confirmado". Ao desativar a conta, ele será
+              Você possui agendamento com status “Confirmado”. Ao desativar a conta, ele será
               cancelado automaticamente.
             </Alerta>
           )}

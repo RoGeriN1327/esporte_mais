@@ -5,7 +5,8 @@ import { useLocation } from 'react-router-dom'
 import * as agendamentosApi from '../../api/agendamentos.api'
 import { mensagemDeErro } from '../../api/client'
 import SeletorDataHorario from '../../components/SeletorDataHorario'
-import { Alerta, Badge, Botao, Campo, Carregando, Modal, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
 import { formatarData, formatarDataHora, formatarHora } from '../../utils/datas'
 
 const FILTROS_VAZIOS = { data: '', nome_quadra: '', esporte: '', status: '' }
@@ -78,7 +79,7 @@ export default function MeusAgendamentosPage() {
     <div className="space-y-6">
       <h1 className="text-2xl font-bold text-gray-800">Meus agendamentos</h1>
 
-      {}
+      {/* Filtros */}
       <form
         className="grid gap-4 rounded-xl bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-5"
         onSubmit={(evento) => {
@@ -149,7 +150,6 @@ export default function MeusAgendamentosPage() {
       <Alerta tipo="sucesso">{mensagem}</Alerta>
       <Alerta tipo="erro">{erro}</Alerta>
 
-      {}
       {isLoading ? (
         <Carregando />
       ) : (agendamentos || []).length === 0 ? (
@@ -199,7 +199,7 @@ export default function MeusAgendamentosPage() {
         </div>
       )}
 
-      {}
+      {/* Modal: Cancelar agendamento */}
       <Modal
         aberto={Boolean(cancelando)}
         titulo="Cancelar agendamento"
@@ -229,7 +229,7 @@ export default function MeusAgendamentosPage() {
         )}
       </Modal>
 
-      {}
+      {/* Modal: Renovar agendamento */}
       <Modal
         aberto={Boolean(renovando)}
         titulo="Renovar agendamento"
@@ -268,7 +268,7 @@ export default function MeusAgendamentosPage() {
         )}
       </Modal>
 
-      {}
+      {/* Modal: Detalhes do agendamento */}
       <Modal
         aberto={Boolean(detalhando)}
         titulo="Detalhes do agendamento"

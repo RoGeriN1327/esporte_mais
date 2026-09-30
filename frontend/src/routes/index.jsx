@@ -2,7 +2,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
 
 import Layout from '../components/Layout'
 import { Carregando } from '../components/ui'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../contexts/useAuth'
 import CadastroPage from '../features/auth/CadastroPage'
 import LoginPage from '../features/auth/LoginPage'
 import RecuperarSenhaPage from '../features/auth/RecuperarSenhaPage'
@@ -18,6 +18,9 @@ import ConfiguracoesPage from '../features/admin/ConfiguracoesPage'
 import PainelAgendamentosPage from '../features/admin/PainelAgendamentosPage'
 import QuadrasAdminPage from '../features/admin/QuadrasAdminPage'
 import UsuariosAdminPage from '../features/admin/UsuariosAdminPage'
+
+// Mapa de rotas. Cada "Rota*" abaixo é um guarda: só renderiza as rotas filhas
+// (<Outlet />) se o usuário logado tiver permissão; senão redireciona.
 
 function destinoDe(usuario) {
   return usuario?.tipo === 'Administrativo' ? '/admin' : '/'

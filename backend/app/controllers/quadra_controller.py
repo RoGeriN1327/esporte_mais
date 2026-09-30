@@ -1,14 +1,14 @@
 from datetime import date
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Query
 
-from app.core.database import get_db
-from app.core.deps import UsuarioAtual, get_current_user
+from app.core.deps import SessaoDb, UsuarioLogado
 from app.schemas.quadra import HorariosDisponiveisOut, OpcoesFiltroOut, QuadraOut
 from app.services.quadra_service import QuadraService
 
 router = APIRouter(prefix="/quadras", tags=["Consulta de Quadras"])
+
 
 @router.get(
     "",
@@ -18,13 +18,14 @@ router = APIRouter(prefix="/quadras", tags=["Consulta de Quadras"])
     "nome e bairro (tela de consulta de quadras).",
 )
 def listar_quadras(
-    esporte: str | None = Query(default=None),
-    nome: str | None = Query(default=None),
-    bairro: str | None = Query(default=None),
-    _usuario: UsuarioAtual = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    _usuario: UsuarioLogado,
+    db: SessaoDb,
+    esporte: str | None = None,
+    nome: str | None = None,
+    bairro: str | None = None,
 ) -> list[QuadraOut]:
     return QuadraService(db).listar_disponiveis(esporte=esporte, nome=nome, bairro=bairro)
+
 
 @router.get(
     "/filtros",
@@ -33,10 +34,9 @@ def listar_quadras(
     description="Modalidades e bairros das quadras cadastradas, para os "
     "dropdowns da tela de consulta.",
 )
-def opcoes_de_filtro(
-    _usuario: UsuarioAtual = Depends(get_current_user), db: Session = Depends(get_db)
-) -> OpcoesFiltroOut:
+def opcoes_de_filtro(_usuario: UsuarioLogado, db: SessaoDb) -> OpcoesFiltroOut:
     return OpcoesFiltroOut(**QuadraService(db).opcoes_de_filtro())
+
 
 @router.get(
     "/{quadra_id}/horarios-disponiveis",
@@ -47,9 +47,9 @@ def opcoes_de_filtro(
 )
 def horarios_disponiveis(
     quadra_id: int,
-    data: date = Query(description="Data desejada (a partir de hoje)"),
-    _usuario: UsuarioAtual = Depends(get_current_user),
-    db: Session = Depends(get_db),
+    data: Annotated[date, Query(description="Data desejada (a partir de hoje)")],
+    _usuario: UsuarioLogado,
+    db: SessaoDb,
 ) -> HorariosDisponiveisOut:
     horarios = QuadraService(db).horarios_disponiveis(quadra_id, data)
     return HorariosDisponiveisOut(id_quadra=quadra_id, data=data, horarios=horarios)

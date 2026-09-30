@@ -5,7 +5,9 @@ from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
 
+
 class Notificacao(Base):
+    """Histórico de e-mails enviados (ou que falharam) pelo EmailService."""
 
     __tablename__ = "notificacao"
     __table_args__ = (Index("ix_notificacao_destinatario", "destinatario"),)

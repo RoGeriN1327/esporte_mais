@@ -1,15 +1,15 @@
 from datetime import date
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, Query, status
-from sqlalchemy.orm import Session
+from fastapi import APIRouter, Query, status
 
-from app.core.database import get_db
-from app.core.deps import UsuarioAtual, require_pessoa
+from app.core.deps import PessoaLogada, SessaoDb
 from app.models.enums import StatusAgendamento
 from app.schemas.agendamento import AgendamentoCreate, AgendamentoOut, RenovacaoRequest
 from app.services.agendamento_service import AgendamentoService
 
 router = APIRouter(prefix="/agendamentos", tags=["Agendamentos"])
+
 
 @router.post(
     "",
@@ -17,18 +17,17 @@ router = APIRouter(prefix="/agendamentos", tags=["Agendamentos"])
     status_code=status.HTTP_201_CREATED,
     summary="Realizar agendamento",
     description="Registra o agendamento no horário selecionado, validando a "
-    "disponibilidade e o limite de um agendamento ativo por usuário "
-    ". Envia e-mail de confirmação.",
+    "disponibilidade e o limite de um agendamento ativo por usuário. "
+    "Envia e-mail de confirmação.",
 )
 def criar_agendamento(
-    dados: AgendamentoCreate,
-    usuario: UsuarioAtual = Depends(require_pessoa),
-    db: Session = Depends(get_db),
+    dados: AgendamentoCreate, usuario: PessoaLogada, db: SessaoDb
 ) -> AgendamentoOut:
     agendamento = AgendamentoService(db).criar(
         usuario, dados.id_quadra, dados.data, dados.hora_inicio
     )
     return AgendamentoOut.de_modelo(agendamento)
+
 
 @router.get(
     "/me",
@@ -38,12 +37,12 @@ def criar_agendamento(
     "data, nome da quadra, esporte e status.",
 )
 def meus_agendamentos(
-    data: date | None = Query(default=None),
-    nome_quadra: str | None = Query(default=None),
-    esporte: str | None = Query(default=None),
-    status_agendamento: StatusAgendamento | None = Query(default=None, alias="status"),
-    usuario: UsuarioAtual = Depends(require_pessoa),
-    db: Session = Depends(get_db),
+    usuario: PessoaLogada,
+    db: SessaoDb,
+    data: date | None = None,
+    nome_quadra: str | None = None,
+    esporte: str | None = None,
+    status_agendamento: Annotated[StatusAgendamento | None, Query(alias="status")] = None,
 ) -> list[AgendamentoOut]:
     agendamentos = AgendamentoService(db).listar_meus(
         usuario.id,
@@ -54,6 +53,7 @@ def meus_agendamentos(
     )
     return [AgendamentoOut.de_modelo(a) for a in agendamentos]
 
+
 @router.get(
     "/me/proximo",
     response_model=AgendamentoOut | None,
@@ -61,11 +61,10 @@ def meus_agendamentos(
     description="Próximo agendamento confirmado do usuário (exibido no menu "
     "principal), ou nulo se não houver.",
 )
-def proximo_agendamento(
-    usuario: UsuarioAtual = Depends(require_pessoa), db: Session = Depends(get_db)
-) -> AgendamentoOut | None:
+def proximo_agendamento(usuario: PessoaLogada, db: SessaoDb) -> AgendamentoOut | None:
     agendamento = AgendamentoService(db).proximo(usuario.id)
     return AgendamentoOut.de_modelo(agendamento) if agendamento is not None else None
+
 
 @router.post(
     "/{agendamento_id}/cancelar",
@@ -76,11 +75,10 @@ def proximo_agendamento(
     "e-mail de cancelamento.",
 )
 def cancelar_agendamento(
-    agendamento_id: int,
-    usuario: UsuarioAtual = Depends(require_pessoa),
-    db: Session = Depends(get_db),
+    agendamento_id: int, usuario: PessoaLogada, db: SessaoDb
 ) -> AgendamentoOut:
     return AgendamentoOut.de_modelo(AgendamentoService(db).cancelar(usuario, agendamento_id))
+
 
 @router.post(
     "/{agendamento_id}/renovar",
@@ -88,14 +86,11 @@ def cancelar_agendamento(
     status_code=status.HTTP_201_CREATED,
     summary="Renovar agendamento",
     description="Renova um agendamento concluído: o registro original passa a "
-    "\"Renovado\" e um novo agendamento confirmado é criado na mesma quadra, na "
+    '"Renovado" e um novo agendamento confirmado é criado na mesma quadra, na '
     "data e horário escolhidos. Envia e-mail de renovação.",
 )
 def renovar_agendamento(
-    agendamento_id: int,
-    dados: RenovacaoRequest,
-    usuario: UsuarioAtual = Depends(require_pessoa),
-    db: Session = Depends(get_db),
+    agendamento_id: int, dados: RenovacaoRequest, usuario: PessoaLogada, db: SessaoDb
 ) -> AgendamentoOut:
     novo = AgendamentoService(db).renovar(usuario, agendamento_id, dados.data, dados.hora_inicio)
     return AgendamentoOut.de_modelo(novo)

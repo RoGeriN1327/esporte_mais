@@ -1,3 +1,9 @@
+"""Cadastra quadras de exemplo para testar o sistema localmente (NÃO usar em produção).
+
+Uso (com os containers no ar):
+    docker compose exec backend python -m scripts.seed_quadras_dev
+"""
+
 from datetime import time
 
 from app.core.database import SessionLocal
@@ -10,7 +16,6 @@ QUADRAS_DEV = [
         "endereco": "Rua Rio Verde, 100",
         "bairro": "Centro",
         "esporte": "Futsal",
-
         "faixas": [(dia, time(8, 0), time(22, 0)) for dia in range(7)],
     },
     {
@@ -31,13 +36,12 @@ QUADRAS_DEV = [
     },
 ]
 
+
 def main() -> None:
     with SessionLocal() as db:
         for dados in QUADRAS_DEV:
             existente = (
-                db.query(Quadra)
-                .filter_by(nome=dados["nome"], esporte=dados["esporte"])
-                .first()
+                db.query(Quadra).filter_by(nome=dados["nome"], esporte=dados["esporte"]).first()
             )
             if existente is not None:
                 print(f'Quadra "{dados["nome"]}" ({dados["esporte"]}) ja existe; pulando.')
@@ -56,6 +60,7 @@ def main() -> None:
             db.add(quadra)
             print(f'Quadra "{dados["nome"]}" ({dados["esporte"]}) criada.')
         db.commit()
+
 
 if __name__ == "__main__":
     main()

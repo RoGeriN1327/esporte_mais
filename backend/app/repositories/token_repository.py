@@ -1,9 +1,10 @@
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
-from app.models import RefreshToken, TokenRedefinicaoSenha, TokenRevogado, TipoUsuario
+from app.models import RefreshToken, TipoUsuario, TokenRedefinicaoSenha, TokenRevogado
+
 
 class TokenRepository:
     def __init__(self, db: Session) -> None:
@@ -26,7 +27,7 @@ class TokenRepository:
         return self.db.scalar(select(RefreshToken).where(RefreshToken.token_hash == token_hash))
 
     def revogar_refresh(self, token: RefreshToken) -> None:
-        token.revogado_em = datetime.now(timezone.utc)
+        token.revogado_em = datetime.now(UTC)
         self.db.flush()
 
     def revogar_todos_refresh_do_usuario(self, tipo_usuario: TipoUsuario, usuario_id: int) -> None:
@@ -37,11 +38,11 @@ class TokenRepository:
                 RefreshToken.usuario_id == usuario_id,
                 RefreshToken.revogado_em.is_(None),
             )
-            .values(revogado_em=datetime.now(timezone.utc))
+            .values(revogado_em=datetime.now(UTC))
         )
 
     def adicionar_jti_na_denylist(self, jti: str, expira_em: datetime) -> None:
-
+        """Invalida um access token antes de ele expirar (usado no logout)."""
         if not self.jti_esta_revogado(jti):
             self.db.add(TokenRevogado(jti=jti, expira_em=expira_em))
             self.db.flush()
@@ -68,5 +69,5 @@ class TokenRepository:
         )
 
     def marcar_token_redefinicao_usado(self, token: TokenRedefinicaoSenha) -> None:
-        token.usado_em = datetime.now(timezone.utc)
+        token.usado_em = datetime.now(UTC)
         self.db.flush()

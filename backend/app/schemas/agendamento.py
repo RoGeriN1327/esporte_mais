@@ -1,24 +1,26 @@
+"""Schemas de agendamentos (cidadão e painel administrativo) e das configurações."""
+
 from datetime import date, datetime, time
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 from app.models import Agendamento
 from app.models.enums import StatusAgendamento
-from app.utils.cpf import cpf_valido, normalizar_cpf
+from app.schemas.validadores import CPF
+
 
 class AgendamentoCreate(BaseModel):
-
     id_quadra: int
     data: date = Field(description="Data do agendamento (a partir de hoje)")
     hora_inicio: time = Field(description="Horário selecionado entre os disponíveis")
 
-class RenovacaoRequest(BaseModel):
 
+class RenovacaoRequest(BaseModel):
     data: date
     hora_inicio: time
 
-class AgendamentoOut(BaseModel):
 
+class AgendamentoOut(BaseModel):
     id: int
     id_quadra: int
     nome_quadra: str
@@ -43,28 +45,20 @@ class AgendamentoOut(BaseModel):
             data_criacao=agendamento.data_criacao,
         )
 
-class AgendamentoAdminCreate(BaseModel):
 
-    cpf_usuario: str = Field(description="CPF do Usuário Pessoa (com ou sem máscara)")
+class AgendamentoAdminCreate(BaseModel):
+    cpf_usuario: CPF = Field(description="CPF do Usuário Pessoa (com ou sem máscara)")
     id_quadra: int
     data: date
     hora_inicio: time
 
-    @field_validator("cpf_usuario")
-    @classmethod
-    def validar_cpf(cls, valor: str) -> str:
-        cpf = normalizar_cpf(valor)
-        if not cpf_valido(cpf):
-            raise ValueError("CPF inválido. Informe 11 dígitos numéricos válidos.")
-        return cpf
 
 class RemarcacaoRequest(BaseModel):
-
     data: date
     hora_inicio: time
 
-class AgendamentoAdminOut(AgendamentoOut):
 
+class AgendamentoAdminOut(AgendamentoOut):
     nome_usuario: str
     cpf_usuario: str
     id_admin_responsavel: int | None
@@ -79,16 +73,19 @@ class AgendamentoAdminOut(AgendamentoOut):
             id_admin_responsavel=agendamento.id_admin_responsavel,
         )
 
-class ConfiguracoesOut(BaseModel):
 
+# --- Configurações do sistema (tela do Gestor) ---
+
+
+class ConfiguracoesOut(BaseModel):
     cancelamento_antecedencia_minima_horas: int
     lembrete_antecedencia_horas: int
 
-class ConfiguracoesUpdate(BaseModel):
 
+class ConfiguracoesUpdate(BaseModel):
     cancelamento_antecedencia_minima_horas: int | None = Field(
         default=None, ge=0, le=168, description="Horas de antecedência mínima (0 a 168)"
     )
     lembrete_antecedencia_horas: int | None = Field(
-        default=None, ge=1, le=168, description="D12 — horas de antecedência do lembrete (1 a 168)"
+        default=None, ge=1, le=168, description="Horas de antecedência do lembrete (1 a 168)"
     )

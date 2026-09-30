@@ -1,7 +1,9 @@
 import re
 
+
 def normalizar_cpf(valor: str) -> str:
     return re.sub(r"\D", "", valor or "")
+
 
 def cpf_valido(cpf: str) -> bool:
     if len(cpf) != 11 or not cpf.isdigit():

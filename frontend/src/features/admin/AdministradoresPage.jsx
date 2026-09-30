@@ -4,8 +4,9 @@ import { useForm } from 'react-hook-form'
 
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
-import { Alerta, Badge, Botao, Campo, Carregando, Modal, classesDeInput } from '../../components/ui'
-import { useAuth } from '../../contexts/AuthContext'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
+import { useAuth } from '../../contexts/useAuth'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
 
 export default function AdministradoresPage() {
@@ -112,7 +113,6 @@ export default function AdministradoresPage() {
                       >
                         Editar
                       </Botao>
-                      {}
                       {admin.status === 'Ativo' && admin.id !== usuarioLogado?.id && (
                         <Botao
                           variante="perigo"
@@ -130,7 +130,7 @@ export default function AdministradoresPage() {
         </div>
       )}
 
-      {}
+      {/* Modal: cadastrar ou editar administrador */}
       <Modal
         aberto={modal?.modo === 'novo' || modal?.modo === 'editar'}
         titulo={modal?.modo === 'novo' ? 'Cadastrar administrador' : 'Editar administrador'}
@@ -166,7 +166,6 @@ export default function AdministradoresPage() {
               })}
             />
           </Campo>
-          {}
           <Campo label="Perfil" erro={errors.perfil?.message}>
             <select
               className={classesDeInput(errors.perfil)}
@@ -194,7 +193,7 @@ export default function AdministradoresPage() {
         </form>
       </Modal>
 
-      {}
+      {/* Modal: Desativar administrador */}
       <Modal aberto={modal?.modo === 'desativar'} titulo="Desativar administrador" onFechar={() => setModal(null)}>
         {modal?.admin && (
           <div className="space-y-4">

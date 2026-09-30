@@ -2,7 +2,8 @@ import { useQuery } from '@tanstack/react-query'
 
 import * as quadrasApi from '../api/quadras.api'
 import { hojeISO, horaCurta } from '../utils/datas'
-import { Campo, Spinner, classesDeInput } from './ui'
+import { classesDeInput } from './estilos'
+import { Campo, Spinner } from './ui'
 
 export default function SeletorDataHorario({ quadraId, data, hora, onMudarData, onMudarHora }) {
   const { data: disponibilidade, isFetching } = useQuery({

@@ -4,7 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
 import * as authApi from '../../api/auth.api'
-import { Alerta, Botao, Campo, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Botao, Campo } from '../../components/ui'
 import CartaoAuth from './CartaoAuth'
 
 export default function RedefinirSenhaPage() {
@@ -20,7 +21,6 @@ export default function RedefinirSenhaPage() {
     setEnviando(true)
     try {
       await authApi.redefinirSenha(token, dados.novaSenha, dados.confirmarSenha)
-
       navigate('/login', {
         state: { mensagem: 'Senha redefinida com sucesso. Faça login com a nova senha.' },
       })

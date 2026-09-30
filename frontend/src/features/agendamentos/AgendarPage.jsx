@@ -6,7 +6,8 @@ import * as agendamentosApi from '../../api/agendamentos.api'
 import { mensagemDeErro } from '../../api/client'
 import * as quadrasApi from '../../api/quadras.api'
 import SeletorDataHorario from '../../components/SeletorDataHorario'
-import { Alerta, Botao, Campo, Carregando, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Botao, Campo, Carregando } from '../../components/ui'
 
 export default function AgendarPage() {
   const { id } = useParams()
@@ -36,7 +37,7 @@ export default function AgendarPage() {
     },
     onError: (excecao) => {
       setErro(mensagemDeErro(excecao))
-
+      // O horário pode ter sido ocupado por outra pessoa: recarrega a lista.
       setHora('')
       queryClient.invalidateQueries({ queryKey: ['horarios-disponiveis', quadraId] })
     },
@@ -52,7 +53,6 @@ export default function AgendarPage() {
       <h1 className="text-2xl font-bold text-gray-800">Agendar horário</h1>
 
       <div className="space-y-4 rounded-xl bg-white p-6 shadow">
-        {}
         <Campo label="Nome da quadra">
           <input
             className={classesDeInput(false)}
@@ -75,7 +75,6 @@ export default function AgendarPage() {
 
         <Alerta tipo="erro">{erro}</Alerta>
 
-        {}
         <div className="flex gap-3">
           <Botao
             onClick={() => confirmar.mutate()}

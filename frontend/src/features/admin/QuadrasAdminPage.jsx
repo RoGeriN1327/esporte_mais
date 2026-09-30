@@ -3,9 +3,11 @@ import { useState } from 'react'
 
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
-import { Alerta, Badge, Botao, Campo, Carregando, Modal, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
 import { DIAS_SEMANA, horaCurta } from '../../utils/datas'
 
+// Mesma lista de ESPORTES_VALIDOS em backend/app/schemas/quadra.py
 const ESPORTES = ['Futebol', 'Futsal', 'Basquete', 'Vôlei', 'Tênis', 'Handebol']
 
 const GRADE_VAZIA = DIAS_SEMANA.map((_, dia) => ({
@@ -63,7 +65,6 @@ function FormularioQuadra({ inicial, edicao, aoSalvar, aoCancelar, salvando, err
 
   return (
     <div className="space-y-4">
-      {}
       <Campo label="Nome da quadra">
         <input className={classesDeInput(false)} value={nome} onChange={(e) => setNome(e.target.value)} />
       </Campo>
@@ -101,7 +102,6 @@ function FormularioQuadra({ inicial, edicao, aoSalvar, aoCancelar, salvando, err
         />
       </Campo>
 
-      {}
       <div>
         <span className="mb-2 block text-sm font-medium text-gray-700">
           Horários disponíveis (grade por dia da semana)
@@ -139,7 +139,6 @@ function FormularioQuadra({ inicial, edicao, aoSalvar, aoCancelar, salvando, err
 
       <Alerta tipo="erro">{erro}</Alerta>
 
-      {}
       <div className="flex justify-end gap-3">
         <Botao variante="secundario" onClick={aoCancelar}>
           Cancelar
@@ -201,7 +200,6 @@ export default function QuadrasAdminPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-gray-800">Gerenciar quadras</h1>
-        {}
         <Botao onClick={() => { setErroModal(''); setModal({ modo: 'novo' }) }}>Nova Quadra</Botao>
       </div>
 
@@ -236,7 +234,6 @@ export default function QuadrasAdminPage() {
                   <td className="px-4 py-3">{quadra.bairro}</td>
                   <td className="px-4 py-3"><Badge>{quadra.status}</Badge></td>
                   <td className="px-4 py-3">
-                    {}
                     <div className="flex justify-end gap-2">
                       <Botao
                         variante="secundario"
@@ -264,7 +261,7 @@ export default function QuadrasAdminPage() {
         </div>
       )}
 
-      {}
+      {/* Modal: nova quadra ou edição */}
       <Modal
         aberto={modal?.modo === 'novo' || modal?.modo === 'editar'}
         titulo={modal?.modo === 'novo' ? 'Nova quadra' : 'Editar quadra'}
@@ -286,7 +283,7 @@ export default function QuadrasAdminPage() {
         )}
       </Modal>
 
-      {}
+      {/* Modal: Desativar quadra */}
       <Modal
         aberto={modal?.modo === 'desativar'}
         titulo="Desativar quadra"

@@ -1,3 +1,15 @@
+"""Ponto de entrada da API Esporte+ (FastAPI).
+
+Organização em camadas (cada requisição percorre nesta ordem):
+    controllers/   rotas HTTP: validam a entrada (schemas) e chamam um service
+    services/      regras de negócio; lançam exceções de app.exceptions
+    repositories/  consultas e gravações no banco (SQLAlchemy)
+    models/        tabelas do banco
+
+Erros de negócio (ErroDeDominio) viram respostas JSON {"detail": "..."} com o
+status HTTP definido em cada exceção — ver tratar_erro_de_dominio abaixo.
+"""
+
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
@@ -18,15 +30,17 @@ from app.core.rate_limit import limiter
 from app.core.scheduler import criar_scheduler
 from app.exceptions import ErroDeDominio
 
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
+    """Liga os jobs periódicos junto com a API e os desliga ao encerrar."""
     scheduler = criar_scheduler() if settings.SCHEDULER_ENABLED else None
     if scheduler is not None:
         scheduler.start()
     yield
     if scheduler is not None:
         scheduler.shutdown(wait=False)
+
 
 app = FastAPI(
     title="Esporte+ API",
@@ -48,12 +62,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.exception_handler(ErroDeDominio)
 async def tratar_erro_de_dominio(request: Request, exc: ErroDeDominio) -> JSONResponse:
     headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None
     return JSONResponse(
         status_code=exc.status_code, content={"detail": exc.mensagem}, headers=headers
     )
+
 
 @app.exception_handler(RateLimitExceeded)
 async def tratar_rate_limit(request: Request, exc: RateLimitExceeded) -> JSONResponse:
@@ -62,14 +78,19 @@ async def tratar_rate_limit(request: Request, exc: RateLimitExceeded) -> JSONRes
         content={"detail": "Muitas requisições. Aguarde um instante e tente novamente."},
     )
 
+
+# Área do cidadão e autenticação
 app.include_router(auth_router)
 app.include_router(usuario_router)
-app.include_router(admin_router)
 app.include_router(quadra_router)
 app.include_router(agendamento_router)
-app.include_router(configuracao_router)
+
+# Área administrativa (Gestor e Operador)
+app.include_router(admin_router)
 app.include_router(quadra_admin_router)
 app.include_router(agendamento_admin_router)
+app.include_router(configuracao_router)
+
 
 @app.get("/health", tags=["Infraestrutura"], summary="Verificação de saúde da API")
 def health_check() -> dict[str, str]:

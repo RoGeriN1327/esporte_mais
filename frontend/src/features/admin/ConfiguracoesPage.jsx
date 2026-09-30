@@ -1,28 +1,34 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
-import { Alerta, Botao, Campo, Carregando, classesDeInput } from '../../components/ui'
+import { classesDeInput } from '../../components/estilos'
+import { Alerta, Botao, Campo, Carregando } from '../../components/ui'
 
 export default function ConfiguracoesPage() {
-  const queryClient = useQueryClient()
-  const [prazoCancelamento, setPrazoCancelamento] = useState('')
-  const [antecedenciaLembrete, setAntecedenciaLembrete] = useState('')
-  const [mensagem, setMensagem] = useState('')
-  const [erro, setErro] = useState('')
-
-  const { data: configuracoes, isLoading } = useQuery({
+  const { data: configuracoes, isLoading, error } = useQuery({
     queryKey: ['configuracoes'],
     queryFn: adminApi.obterConfiguracoes,
   })
 
-  useEffect(() => {
-    if (configuracoes) {
-      setPrazoCancelamento(String(configuracoes.cancelamento_antecedencia_minima_horas))
-      setAntecedenciaLembrete(String(configuracoes.lembrete_antecedencia_horas))
-    }
-  }, [configuracoes])
+  if (isLoading) return <Carregando />
+  if (error) return <Alerta tipo="erro">{mensagemDeErro(error)}</Alerta>
+
+  // O formulário só é montado com os dados carregados, já com os valores iniciais.
+  return <FormularioConfiguracoes configuracoes={configuracoes} />
+}
+
+function FormularioConfiguracoes({ configuracoes }) {
+  const queryClient = useQueryClient()
+  const [prazoCancelamento, setPrazoCancelamento] = useState(
+    String(configuracoes.cancelamento_antecedencia_minima_horas),
+  )
+  const [antecedenciaLembrete, setAntecedenciaLembrete] = useState(
+    String(configuracoes.lembrete_antecedencia_horas),
+  )
+  const [mensagem, setMensagem] = useState('')
+  const [erro, setErro] = useState('')
 
   const salvar = useMutation({
     mutationFn: () =>
@@ -40,8 +46,6 @@ export default function ConfiguracoesPage() {
       setErro(mensagemDeErro(excecao))
     },
   })
-
-  if (isLoading) return <Carregando />
 
   return (
     <div className="mx-auto max-w-xl space-y-4">

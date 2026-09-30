@@ -15,8 +15,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.core.database import Base
 from app.models.enums import StatusQuadra
 
-class Quadra(Base):
 
+class Quadra(Base):
     __tablename__ = "quadra"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -35,11 +35,12 @@ class Quadra(Base):
         back_populates="quadra", cascade="all, delete-orphan"
     )
 
+
 class QuadraFaixaHoraria(Base):
+    """Faixa de funcionamento em um dia da semana (0 = segunda ... 6 = domingo)."""
 
     __tablename__ = "quadra_faixa_horaria"
     __table_args__ = (
-
         CheckConstraint("dia_semana BETWEEN 0 AND 6", name="dia_semana_valido"),
         CheckConstraint("hora_fim > hora_inicio", name="horas_validas"),
         Index("ix_quadra_faixa_horaria_id_quadra", "id_quadra"),
