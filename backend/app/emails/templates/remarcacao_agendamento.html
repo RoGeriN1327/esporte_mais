@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import etiqueta, titulo %}
+{% block conteudo %}
+{% set rotulo_data = "Nova data" %}
+{% set rotulo_horario = "Novo horário" %}
+{{ etiqueta("Agendamento remarcado", "aviso") }}
+{{ titulo("Seu horário mudou") }}
+<p style="margin:12px 0 0; font-size:16px; line-height:25px; color:#36443c;">
+  Olá, <strong style="color:#0f1f17;">{{ nome }}</strong>! A Secretaria de Esportes remarcou o seu agendamento. Confira os novos dados:
+</p>
+{% include "_agendamento.html" %}
+<p style="margin:24px 0 0; font-size:15px; line-height:24px; color:#36443c;">
+  Em caso de dúvida, procure a Secretaria Municipal de Esportes.
+</p>
+{% endblock %}

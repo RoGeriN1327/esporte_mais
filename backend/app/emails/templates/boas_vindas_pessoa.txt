@@ -1,0 +1,14 @@
+{% extends "base.txt" %}
+{% block conteudo %}
+Olá, {{ nome }}!
+
+Sua conta foi criada no Esporte+ pela equipe da Secretaria de Esportes.
+
+Acesse com o e-mail {{ email }} e a senha abaixo:
+
+    {{ senha }}
+
+Entrar no Esporte+: {{ url_sistema }}/login
+
+Recomendamos trocar a senha depois do primeiro acesso, pela opção “Esqueci minha senha” na tela de login.
+{% endblock %}

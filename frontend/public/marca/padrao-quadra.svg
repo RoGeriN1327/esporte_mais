@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 900" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+  <!-- Quadra poliesportiva vista de cima (vertical): textura decorativa do painel da marca -->
+  <rect x="60" y="60" width="480" height="780" rx="16"/>
+  <path d="M60 450h480"/>
+  <circle cx="300" cy="450" r="90"/>
+  <circle cx="300" cy="450" r="6" fill="#fff"/>
+  <path d="M190 60v70a110 110 0 0 0 220 0V60M190 840v-70a110 110 0 0 1 220 0v70"/>
+  <path d="M250 60v-22h100v22M250 840v22h100v-22"/>
+  <circle cx="300" cy="210" r="5" fill="#fff"/>
+  <circle cx="300" cy="690" r="5" fill="#fff"/>
+</svg>

@@ -1,0 +1,39 @@
+{# Componentes visuais reaproveitados pelos e-mails (HTML de e-mail: tabelas e estilos inline). #}
+
+{% macro etiqueta(texto, tom="sucesso") %}
+{% set cores = {
+  "sucesso": ("#eef7f1", "#0f5c30"),
+  "erro": ("#fef3f2", "#b42318"),
+  "aviso": ("#fffaeb", "#b54708"),
+  "neutro": ("#edf1ef", "#36443c"),
+} %}
+{% set fundo, texto_cor = cores[tom] %}
+<span style="display:inline-block; padding:4px 10px; border-radius:6px; background-color:{{ fundo }}; color:{{ texto_cor }}; font-size:12px; line-height:16px; font-weight:800;">{{ texto }}</span>
+{% endmacro %}
+
+{% macro titulo(texto) %}
+<h1 style="margin:16px 0 0; font-size:26px; line-height:32px; font-weight:900; color:#0f1f17;">{{ texto }}</h1>
+{% endmacro %}
+
+{# Botão "à prova de Outlook": tabela com fundo na célula e o link ocupando toda a área. #}
+{% macro botao(url, texto) %}
+<table role="presentation" cellpadding="0" cellspacing="0" style="margin:28px 0 0;">
+  <tr>
+    <td align="center" style="border-radius:10px; background-color:#13703a;">
+      <a href="{{ url }}" target="_blank" style="display:inline-block; padding:14px 28px; font-size:16px; line-height:20px; font-weight:800; color:#ffffff; text-decoration:none; border-radius:10px;">{{ texto }}</a>
+    </td>
+  </tr>
+</table>
+{% endmacro %}
+
+{# Caixa de destaque para um código (ex.: senha temporária). #}
+{% macro destaque(rotulo, valor) %}
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0 0; border:1px solid #dce3df; border-radius:12px; background-color:#f6f8f7;">
+  <tr>
+    <td style="padding:16px 20px;">
+      <div style="font-size:13px; line-height:18px; color:#66766d;">{{ rotulo }}</div>
+      <div style="margin-top:4px; font-family:'Courier New', Courier, monospace; font-size:22px; line-height:30px; font-weight:700; letter-spacing:1px; color:#0f1f17;">{{ valor }}</div>
+    </td>
+  </tr>
+</table>
+{% endmacro %}

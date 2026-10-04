@@ -1,1 +1,94 @@
 @import "tailwindcss";
+@import "@fontsource-variable/mulish";
+
+/*
+ * Design system do Esporte+ — tokens de cor, tipografia e forma.
+ * Identidade: verde e branco (cores de Rio Verde), Mulish, componentes sóbrios.
+ * Só tema claro por enquanto; as cores ficam em tokens para o tema escuro entrar depois.
+ */
+@theme {
+  --font-sans: "Mulish Variable", ui-sans-serif, system-ui, sans-serif;
+
+  /* Verde da marca. 600 = cor principal (#13703A); 700 = hover/pressionado. */
+  --color-marca-50: #eef7f1;
+  --color-marca-100: #d6ecdd;
+  --color-marca-200: #aed8bc;
+  --color-marca-300: #7cbe93;
+  --color-marca-400: #47a067;
+  --color-marca-500: #23854a;
+  --color-marca-600: #13703a;
+  --color-marca-700: #0f5c30;
+  --color-marca-800: #0c4826;
+  --color-marca-900: #08331b;
+
+  /* Neutros levemente esverdeados, para harmonizar com a marca. 900 = cor do texto. */
+  --color-cinza-50: #f6f8f7;
+  --color-cinza-100: #edf1ef;
+  --color-cinza-200: #dce3df;
+  --color-cinza-300: #c3cdc7;
+  --color-cinza-400: #94a39a;
+  --color-cinza-500: #66766d;
+  --color-cinza-600: #4a5a51;
+  --color-cinza-700: #36443c;
+  --color-cinza-800: #222e27;
+  --color-cinza-900: #0f1f17;
+
+  /* Entrada do painel lateral (celular): só transform/opacity */
+  --animate-entrar: entrar 160ms ease-out;
+
+  /* Estados (usados só quando há algo a comunicar) */
+  --color-erro-50: #fef3f2;
+  --color-erro-200: #fecdca;
+  --color-erro-600: #d92d20;
+  --color-erro-700: #b42318;
+  --color-aviso-50: #fffaeb;
+  --color-aviso-200: #fedf89;
+  --color-aviso-700: #b54708;
+
+  @keyframes entrar {
+    from {
+      opacity: 0;
+      transform: translateX(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
+
+@layer base {
+  html {
+    color-scheme: light;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-white font-sans text-cinza-900 antialiased;
+  }
+
+  a,
+  button,
+  input,
+  select,
+  textarea,
+  label {
+    touch-action: manipulation;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

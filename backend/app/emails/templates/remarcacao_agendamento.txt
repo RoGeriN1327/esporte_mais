@@ -1,0 +1,12 @@
+{% extends "base.txt" %}
+{% block conteudo %}
+{% set rotulo_data = "Nova data" %}
+{% set rotulo_horario = "Novo horário" %}
+Olá, {{ nome }}!
+
+Seu agendamento foi remarcado pela Secretaria de Esportes:
+
+{% include "_agendamento.txt" %}
+
+Em caso de dúvida, procure a Secretaria Municipal de Esportes.
+{% endblock %}

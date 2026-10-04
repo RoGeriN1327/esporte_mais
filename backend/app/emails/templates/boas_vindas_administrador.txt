@@ -1,0 +1,14 @@
+{% extends "base.txt" %}
+{% block conteudo %}
+Olá, {{ nome }}!
+
+Sua conta administrativa ({{ perfil }}) foi criada no Esporte+.
+
+Acesse com o e-mail {{ email }} e a senha temporária abaixo:
+
+    {{ senha }}
+
+Entrar no painel: {{ url_sistema }}/login
+
+Recomendamos trocar a senha depois do primeiro acesso, pela opção “Esqueci minha senha” na tela de login.
+{% endblock %}
