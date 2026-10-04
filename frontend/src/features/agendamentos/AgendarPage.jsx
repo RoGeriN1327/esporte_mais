@@ -24,8 +24,7 @@ export default function AgendarPage() {
   const [hora, setHora] = useState('')
   const [erro, setErro] = useState('')
 
-  // Volta para a consulta com os mesmos filtros e resultados
-  const voltarPara = `/quadras${location.state?.origem ? `?${location.state.origem}` : ''}`
+  const voltarPara = '/quadras'
 
   const quadraDoEstado = location.state?.quadra
   const { data: quadras, isLoading } = useQuery({
@@ -40,8 +39,9 @@ export default function AgendarPage() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['proximo-agendamento'] })
       queryClient.invalidateQueries({ queryKey: ['meus-agendamentos'] })
-      navigate('/meus-agendamentos?buscar=1', {
-        state: { mensagem: 'Agendamento confirmado! Você receberá um e-mail com os dados da reserva.' },
+      // consultar: abre "Meus agendamentos" já listando, para o usuário ver a reserva nova
+      navigate('/meus-agendamentos', {
+        state: { mensagem: 'Agendamento confirmado! Você receberá um e-mail com os dados da reserva.', consultar: true },
       })
     },
     onError: (excecao) => {

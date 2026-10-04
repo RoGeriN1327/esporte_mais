@@ -19,7 +19,7 @@ import {
 } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
-import { useConsultaNaUrl } from '../../hooks/useConsultaNaUrl'
+import { useConsulta } from '../../hooks/useConsulta'
 import { DIAS_SEMANA, horaCurta } from '../../utils/datas'
 
 // Mesma lista de ESPORTES_VALIDOS em backend/app/schemas/quadra.py
@@ -231,7 +231,7 @@ function DetalhesQuadra({ quadra, onFechar, onEditar, onDesativar }) {
 
 export default function QuadrasAdminPage() {
   const queryClient = useQueryClient()
-  const consulta = useConsultaNaUrl(CHAVES)
+  const consulta = useConsulta(CHAVES)
   const [mensagem, setMensagem] = useState('')
   const [erroModal, setErroModal] = useState('')
   const [modal, setModal] = useState(null)
@@ -284,7 +284,7 @@ export default function QuadrasAdminPage() {
 
       <div className="space-y-8">
         <PainelFiltros
-          key={`${consulta.busca}|${Boolean(opcoes)}`}
+          key={`${consulta.versao}|${Boolean(opcoes)}`}
           onBuscar={(dados) => consulta.buscar(Object.fromEntries(dados))}
           botoes={<BotoesFiltro onLimpar={consulta.limpar} buscando={isFetching && consulta.consultado} />}
         >
