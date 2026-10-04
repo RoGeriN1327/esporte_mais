@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
 import * as usuariosApi from '../../api/usuarios.api'
+import CampoSenha from '../../components/CampoSenha'
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Botao, Campo } from '../../components/ui'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
@@ -72,29 +73,26 @@ export default function CadastroPage() {
             })}
           />
         </Campo>
-        <Campo label="Senha" erro={errors.senha?.message}>
-          <input
-            type="password"
-            autoComplete="new-password"
-            className={classesDeInput(errors.senha)}
-            {...register('senha', {
-              required: 'Informe a senha.',
-              minLength: { value: 8, message: 'A senha deve ter no mínimo 8 caracteres.' },
-            })}
-          />
-        </Campo>
-        <Campo label="Confirmar senha" erro={errors.confirmarSenha?.message}>
-          <input
-            type="password"
-            autoComplete="new-password"
-            className={classesDeInput(errors.confirmarSenha)}
-            {...register('confirmarSenha', {
-              required: 'Confirme a senha.',
-              validate: (valor) =>
-                valor === getValues('senha') || 'A confirmação de senha não confere com a senha informada.',
-            })}
-          />
-        </Campo>
+        <CampoSenha
+          label="Senha"
+          erro={errors.senha?.message}
+          dica="Mínimo de 8 caracteres."
+          autoComplete="new-password"
+          {...register('senha', {
+            required: 'Informe a senha.',
+            minLength: { value: 8, message: 'A senha deve ter no mínimo 8 caracteres.' },
+          })}
+        />
+        <CampoSenha
+          label="Confirmar senha"
+          erro={errors.confirmarSenha?.message}
+          autoComplete="new-password"
+          {...register('confirmarSenha', {
+            required: 'Confirme a senha.',
+            validate: (valor) =>
+              valor === getValues('senha') || 'A confirmação de senha não confere com a senha informada.',
+          })}
+        />
         <Alerta tipo="erro">{erro}</Alerta>
         <Botao type="submit" carregando={enviando} className="w-full">
           Cadastrar

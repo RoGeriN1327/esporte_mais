@@ -1,10 +1,10 @@
 // Tela de login (RF002; campos e botões dos Quadros 7 e 8 do DERS).
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { TbEye, TbEyeOff } from 'react-icons/tb'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
+import CampoSenha from '../../components/CampoSenha'
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Botao, Campo } from '../../components/ui'
 import { useAuth } from '../../contexts/useAuth'
@@ -16,7 +16,6 @@ export default function LoginPage() {
   const location = useLocation()
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const [senhaVisivel, setSenhaVisivel] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm()
 
   async function aoEntrar(dados) {
@@ -51,28 +50,7 @@ export default function LoginPage() {
           </Campo>
 
           <div className="relative">
-            <Campo id="login-senha" label="Senha" erro={errors.senha?.message}>
-              <div className="relative">
-                <input
-                  id="login-senha"
-                  type={senhaVisivel ? 'text' : 'password'}
-                  autoComplete="current-password"
-                  aria-invalid={errors.senha ? true : undefined}
-                  aria-describedby={errors.senha ? 'login-senha-mensagem' : undefined}
-                  className={`${classesDeInput(errors.senha)} pr-11`}
-                  {...register('senha', { required: 'Informe a senha.' })}
-                />
-                <button
-                  type="button"
-                  onClick={() => setSenhaVisivel((visivel) => !visivel)}
-                  aria-label={senhaVisivel ? 'Ocultar senha' : 'Mostrar senha'}
-                  aria-pressed={senhaVisivel}
-                  className="absolute inset-y-0 right-0 grid w-11 place-items-center rounded-r-lg text-cinza-500 transition-colors hover:text-cinza-800 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca-600"
-                >
-                  {senhaVisivel ? <TbEyeOff aria-hidden="true" className="size-5" /> : <TbEye aria-hidden="true" className="size-5" />}
-                </button>
-              </div>
-            </Campo>
+            <CampoSenha label="Senha" erro={errors.senha?.message} {...register('senha', { required: 'Informe a senha.' })} />
             <Link
               to="/recuperar-senha"
               className="absolute right-0 top-0 rounded text-sm font-semibold text-marca-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-600"

@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import * as authApi from '../api/auth.api'
-import api, {
+import {
   CHAVE_REFRESH,
   CHAVE_USUARIO,
   definirAccessToken,
   registrarSessaoExpirada,
+  renovarSessao,
 } from '../api/client'
 import { AuthContext } from './useAuth'
 
@@ -30,11 +31,11 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     registrarSessaoExpirada(() => setUsuario(null))
-    const refresh = localStorage.getItem(CHAVE_REFRESH)
-    if (!refresh) return
-    api
-      .post('/auth/refresh', { refresh_token: refresh })
-      .then(({ data }) => guardarSessao(data))
+    if (!localStorage.getItem(CHAVE_REFRESH)) return
+    // renovarSessao() é compartilhada: se o efeito rodar duas vezes (StrictMode) ou se
+    // uma requisição já estiver renovando, todos aguardam a mesma chamada ao backend.
+    renovarSessao()
+      .then((data) => guardarSessao(data))
       .catch(() => limparSessao())
       .finally(() => setCarregando(false))
   }, [guardarSessao, limparSessao])

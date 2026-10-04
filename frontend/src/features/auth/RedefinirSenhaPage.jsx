@@ -4,8 +4,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
 import * as authApi from '../../api/auth.api'
-import { classesDeInput } from '../../components/estilos'
-import { Alerta, Botao, Campo } from '../../components/ui'
+import CampoSenha from '../../components/CampoSenha'
+import { Alerta, Botao } from '../../components/ui'
 import CartaoAuth from './CartaoAuth'
 
 export default function RedefinirSenhaPage() {
@@ -35,29 +35,26 @@ export default function RedefinirSenhaPage() {
     <CartaoAuth titulo="Redefinir senha" subtitulo="Crie a sua nova senha de acesso.">
       {!token && <Alerta tipo="aviso">Link inválido. Solicite uma nova recuperação de senha.</Alerta>}
       <form className="mt-5 space-y-5" onSubmit={handleSubmit(aoSalvar)} noValidate>
-        <Campo label="Nova senha" erro={errors.novaSenha?.message}>
-          <input
-            type="password"
-            autoComplete="new-password"
-            className={classesDeInput(errors.novaSenha)}
-            {...register('novaSenha', {
-              required: 'Informe a nova senha.',
-              minLength: { value: 8, message: 'A senha deve ter no mínimo 8 caracteres.' },
-            })}
-          />
-        </Campo>
-        <Campo label="Confirmar nova senha" erro={errors.confirmarSenha?.message}>
-          <input
-            type="password"
-            autoComplete="new-password"
-            className={classesDeInput(errors.confirmarSenha)}
-            {...register('confirmarSenha', {
-              required: 'Confirme a nova senha.',
-              validate: (valor) =>
-                valor === getValues('novaSenha') || 'A confirmação de senha não confere com a senha informada.',
-            })}
-          />
-        </Campo>
+        <CampoSenha
+          label="Nova senha"
+          erro={errors.novaSenha?.message}
+          dica="Mínimo de 8 caracteres."
+          autoComplete="new-password"
+          {...register('novaSenha', {
+            required: 'Informe a nova senha.',
+            minLength: { value: 8, message: 'A senha deve ter no mínimo 8 caracteres.' },
+          })}
+        />
+        <CampoSenha
+          label="Confirmar nova senha"
+          erro={errors.confirmarSenha?.message}
+          autoComplete="new-password"
+          {...register('confirmarSenha', {
+            required: 'Confirme a nova senha.',
+            validate: (valor) =>
+              valor === getValues('novaSenha') || 'A confirmação de senha não confere com a senha informada.',
+          })}
+        />
         <Alerta tipo="erro">{erro}</Alerta>
         <Botao type="submit" carregando={enviando} disabled={!token} className="w-full">
           Salvar nova senha

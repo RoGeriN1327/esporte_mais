@@ -104,10 +104,7 @@ export default function PerfilPage() {
 
             <Alerta tipo="sucesso">{mensagem}</Alerta>
 
-            <div className="flex flex-col-reverse gap-3 border-t border-cinza-100 pt-5 sm:flex-row sm:justify-end">
-              <Botao type="button" variante="secundario" onClick={() => navigate('/')}>
-                Voltar
-              </Botao>
+            <div className="flex flex-col gap-3 border-t border-cinza-100 pt-5 sm:flex-row sm:justify-end">
               <Botao type="submit" carregando={salvarEmail.isPending}>
                 {salvarEmail.isPending ? 'Salvando…' : 'Salvar alterações'}
               </Botao>
