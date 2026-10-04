@@ -11,6 +11,7 @@ import api, {
   definirAccessToken,
   mensagemDeErro,
   registrarSessaoExpirada,
+  renovarSessao,
 } from './client'
 
 const NOVA_SESSAO = {
@@ -155,6 +156,60 @@ describe('interceptors de autenticação', () => {
     await expect(api.get('/usuarios/me')).rejects.toMatchObject({ response: { status: 401 } })
     expect(refresh).toHaveBeenCalledTimes(1)
     expect(requisicoes).toHaveLength(2)
+  })
+})
+
+describe('renovarSessao (restauração da sessão ao recarregar a página)', () => {
+  let refresh
+
+  beforeEach(() => {
+    localStorage.clear()
+    refresh = vi.spyOn(axios, 'post').mockResolvedValue({ data: NOVA_SESSAO })
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    definirAccessToken(null)
+  })
+
+  it('duas restaurações simultâneas (StrictMode) fazem UMA única chamada ao backend', async () => {
+    // Antes da correção cada chamada enviava o mesmo refresh token; o backend aceita o
+    // token uma única vez, a segunda recebia 401 e o usuário era deslogado ao dar F5.
+    localStorage.setItem(CHAVE_REFRESH, 'refresh-salvo')
+
+    const [primeira, segunda] = await Promise.all([renovarSessao(), renovarSessao()])
+
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(primeira).toEqual(NOVA_SESSAO)
+    expect(segunda).toEqual(NOVA_SESSAO)
+    expect(localStorage.getItem(CHAVE_REFRESH)).toBe('refresh-novo')
+  })
+
+  it('se outra aba renovou antes, tenta de novo com o token atual em vez de deslogar', async () => {
+    localStorage.setItem(CHAVE_REFRESH, 'refresh-da-aba-1')
+    refresh.mockImplementationOnce(async () => {
+      // Enquanto esta aba renovava, a outra trocou o token salvo no localStorage
+      localStorage.setItem(CHAVE_REFRESH, 'refresh-trocado-pela-aba-2')
+      throw new AxiosError('HTTP 401')
+    })
+
+    await expect(renovarSessao()).resolves.toEqual(NOVA_SESSAO)
+    expect(refresh).toHaveBeenNthCalledWith(2, 'http://localhost:8000/auth/refresh', {
+      refresh_token: 'refresh-trocado-pela-aba-2',
+    })
+  })
+
+  it('falha de verdade (token revogado e ninguém renovou) é repassada', async () => {
+    localStorage.setItem(CHAVE_REFRESH, 'refresh-revogado')
+    refresh.mockRejectedValueOnce(new AxiosError('HTTP 401'))
+
+    await expect(renovarSessao()).rejects.toThrow('HTTP 401')
+    expect(refresh).toHaveBeenCalledTimes(1)
+  })
+
+  it('sem refresh token salvo, rejeita sem chamar o backend', async () => {
+    await expect(renovarSessao()).rejects.toThrow('Sem sessão salva')
+    expect(refresh).not.toHaveBeenCalled()
   })
 })
 

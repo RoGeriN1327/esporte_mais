@@ -43,6 +43,8 @@ export function Carregando({ texto = 'Carregando…' }) {
   )
 }
 
+const CONTROLES = new Set(['input', 'select', 'textarea'])
+
 /**
  * Rótulo + campo + mensagem. Quando o filho é um <input>/<select>/<textarea>, o id, o
  * aria-invalid e o aria-describedby são ligados automaticamente; para campos compostos,
@@ -53,7 +55,9 @@ export function Campo({ label, erro, dica, id, children }) {
   const idCampo = id ?? idGerado
   const idMensagem = `${idCampo}-mensagem`
   const temMensagem = Boolean(erro || dica)
-  const controleSimples = isValidElement(children) && typeof children.type === 'string'
+  // Só controles de formulário recebem o id; um wrapper (ex.: <div> do CampoSenha) não,
+  // senão o id ficaria duplicado e o rótulo deixaria de apontar para o campo.
+  const controleSimples = isValidElement(children) && CONTROLES.has(children.type)
   const filho = controleSimples
     ? cloneElement(children, {
         id: children.props.id ?? idCampo,
