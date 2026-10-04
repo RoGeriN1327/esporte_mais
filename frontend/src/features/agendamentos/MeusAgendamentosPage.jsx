@@ -13,7 +13,7 @@ import { CabecalhoPagina, EstadoVazio, PainelFiltros } from '../../components/Pa
 import SeletorDataHorario from '../../components/SeletorDataHorario'
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
-import { useConsultaNaUrl } from '../../hooks/useConsultaNaUrl'
+import { useConsulta } from '../../hooks/useConsulta'
 import { dataExtensa, formatarDataHora, formatarHora, partesDaData } from '../../utils/datas'
 
 const CHAVES = ['data', 'nome_quadra', 'esporte', 'status']
@@ -118,7 +118,7 @@ function Detalhes({ agendamento, onFechar, onCancelar, onRenovar }) {
 export default function MeusAgendamentosPage() {
   const location = useLocation()
   const queryClient = useQueryClient()
-  const consulta = useConsultaNaUrl(CHAVES)
+  const consulta = useConsulta(CHAVES, { consultarAoAbrir: Boolean(location.state?.consultar) })
   const [mensagem, setMensagem] = useState(location.state?.mensagem ?? '')
   const [erro, setErro] = useState('')
   const [detalhando, setDetalhando] = useState(null)
@@ -228,7 +228,7 @@ export default function MeusAgendamentosPage() {
 
       <div className="space-y-8">
         <PainelFiltros
-          key={`${consulta.busca}|${Boolean(esportesDoUsuario)}`}
+          key={`${consulta.versao}|${Boolean(esportesDoUsuario)}`}
           colunas="lg:grid-cols-4"
           onBuscar={(dados) => consulta.buscar(Object.fromEntries(dados))}
           botoes={

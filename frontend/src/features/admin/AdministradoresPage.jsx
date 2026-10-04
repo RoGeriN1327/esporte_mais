@@ -22,7 +22,7 @@ import {
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
 import { useAuth } from '../../contexts/useAuth'
-import { useConsultaNaUrl } from '../../hooks/useConsultaNaUrl'
+import { useConsulta } from '../../hooks/useConsulta'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
 import { formatarData } from '../../utils/datas'
 import { normalizarTexto } from '../../utils/texto'
@@ -112,7 +112,7 @@ function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro
 export default function AdministradoresPage() {
   const queryClient = useQueryClient()
   const { usuario: usuarioLogado } = useAuth()
-  const consulta = useConsultaNaUrl(CHAVES)
+  const consulta = useConsulta(CHAVES)
   const [mensagem, setMensagem] = useState('')
   const [erroModal, setErroModal] = useState('')
   const [modal, setModal] = useState(null)
@@ -173,7 +173,7 @@ export default function AdministradoresPage() {
 
       <div className="space-y-8">
         <PainelFiltros
-          key={consulta.busca}
+          key={consulta.versao}
           onBuscar={(dados) => consulta.buscar(Object.fromEntries(dados))}
           botoes={<BotoesFiltro onLimpar={consulta.limpar} buscando={isFetching && consulta.consultado} />}
         >

@@ -1,5 +1,5 @@
 // Consulta de quadras (RF003, fluxo básico; campos do Quadro 23 e botões do Quadro 24 do DERS).
-// A busca só acontece ao clicar em "Buscar"; os filtros ficam na URL para o "Voltar" do agendamento.
+// A busca só acontece ao clicar em "Buscar"; os filtros ficam só em memória (URL limpa).
 import { useQuery } from '@tanstack/react-query'
 import { TbAdjustmentsHorizontal, TbMapPin, TbSearch, TbSearchOff } from 'react-icons/tb'
 import { useNavigate } from 'react-router-dom'
@@ -9,7 +9,7 @@ import IconeEsporte from '../../components/IconeEsporte'
 import { CabecalhoPagina, EstadoVazio, PainelFiltros } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Botao, Campo, Carregando } from '../../components/ui'
-import { useConsultaNaUrl } from '../../hooks/useConsultaNaUrl'
+import { useConsulta } from '../../hooks/useConsulta'
 
 const CHAVES = ['esporte', 'nome', 'bairro']
 
@@ -41,7 +41,7 @@ function CartaoQuadra({ quadra, onSelecionar }) {
 
 export default function QuadrasPage() {
   const navigate = useNavigate()
-  const consulta = useConsultaNaUrl(CHAVES)
+  const consulta = useConsulta(CHAVES)
 
   const { data: opcoes } = useQuery({ queryKey: ['quadras-filtros'], queryFn: quadrasApi.opcoesDeFiltro })
   const { data: quadras, isFetching, isError } = useQuery({
@@ -51,7 +51,7 @@ export default function QuadrasPage() {
   })
 
   function selecionar(quadra) {
-    navigate(`/quadras/${quadra.id}/agendar`, { state: { quadra, origem: consulta.busca } })
+    navigate(`/quadras/${quadra.id}/agendar`, { state: { quadra } })
   }
 
   let resultado
@@ -102,7 +102,7 @@ export default function QuadrasPage() {
 
       <div className="space-y-8">
         <PainelFiltros
-          key={`${consulta.busca}|${Boolean(opcoes)}`}
+          key={`${consulta.versao}|${Boolean(opcoes)}`}
           onBuscar={(dados) => consulta.buscar(Object.fromEntries(dados))}
           botoes={
             <>
