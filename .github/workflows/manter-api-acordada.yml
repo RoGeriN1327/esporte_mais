@@ -1,0 +1,36 @@
+# Mantém a API acordada no plano gratuito do Render, que hiberna o serviço após 15 minutos
+# sem requisições (a primeira requisição depois disso leva ~50 s, e os jobs de lembrete e
+# conclusão de agendamentos não rodam enquanto a API dorme).
+#
+# Chama /health a cada 10 minutos das 6h às 23h50 (horário de Brasília). A madrugada fica
+# de fora para economizar as 750 horas mensais gratuitas, que são divididas entre os
+# serviços do workspace no Render.
+#
+# Observações: o GitHub só executa agendamentos a partir da branch principal (main), pode
+# atrasar execuções em horários de pico e desativa agendamentos de repositórios sem
+# atividade por 60 dias (basta reativar em Actions).
+name: Manter API acordada
+
+on:
+  schedule:
+    # Cron em UTC (Brasília = UTC-3): 09:00–02:59 UTC = 06:00–23:59 em Brasília.
+    # Minutos 7, 17, 27... evitam o "minuto zero", quando o GitHub mais atrasa agendamentos.
+    - cron: "7-59/10 9-23 * * *"
+    - cron: "7-59/10 0-2 * * *"
+  workflow_dispatch: # permite rodar manualmente pela aba Actions
+
+permissions: {}
+
+jobs:
+  ping:
+    name: Chamar /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: GET /health
+        run: |
+          # Até 3 tentativas: se a API estiver hibernando, a primeira chamada a acorda.
+          curl --fail --silent --show-error \
+            --retry 3 --retry-delay 15 --retry-all-errors \
+            --max-time 90 \
+            https://esporte-mais-api.onrender.com/health

@@ -1,0 +1,100 @@
+# Integração contínua do Esporte+: em todo pull request para a main (e em todo push na
+# main), roda a análise estática e os testes do backend e do frontend. A ruleset da main
+# exige que os dois jobs passem antes do merge.
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Um novo push no mesmo PR cancela a execução anterior, que ficou obsoleta.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    name: Backend (Ruff e testes)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    # Os testes de integração usam um PostgreSQL real; o conftest.py cria e migra o
+    # banco esporte_mais_test a partir desta instância.
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: esporte
+          POSTGRES_PASSWORD: esporte
+          POSTGRES_DB: esporte_mais
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U esporte -d esporte_mais"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql+psycopg://esporte:esporte@localhost:5432/esporte_mais
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            backend/requirements.txt
+            backend/requirements-dev.txt
+
+      - name: Instalar dependências
+        run: pip install -r requirements-dev.txt
+
+      - name: Ruff — análise estática
+        run: ruff check app scripts tests alembic/env.py
+
+      - name: Ruff — formatação
+        run: ruff format --check app scripts tests alembic/env.py
+
+      - name: Testes (unitários e de integração)
+        run: pytest
+
+  frontend:
+    name: Frontend (lint, testes e build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: ESLint
+        run: npm run lint
+
+      - name: Testes (Vitest)
+        run: npm test
+
+      # O build exige VITE_API_URL (vite.config.js); no CI só verificamos que compila.
+      - name: Build de produção
+        run: npm run build
+        env:
+          VITE_API_URL: https://api.exemplo.invalid
