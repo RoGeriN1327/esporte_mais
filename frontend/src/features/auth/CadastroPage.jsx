@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
 import { mensagemDeErro } from '../../api/client'
 import * as usuariosApi from '../../api/usuarios.api'
@@ -35,11 +35,12 @@ export default function CadastroPage() {
   }
 
   return (
-    <CartaoAuth titulo="Criar uma conta" subtitulo="Informe seus dados para se cadastrar.">
-      <form className="space-y-4" onSubmit={handleSubmit(aoCadastrar)} noValidate>
+    <CartaoAuth voltarPara="/login" titulo="Criar uma conta" subtitulo="Informe seus dados para se cadastrar.">
+      <form className="space-y-5" onSubmit={handleSubmit(aoCadastrar)} noValidate>
         <Campo label="Nome Completo" erro={errors.nome?.message}>
           <input
             className={classesDeInput(errors.nome)}
+            autoComplete="name"
             maxLength={100}
             {...register('nome', { required: 'Informe o nome completo.' })}
           />
@@ -48,6 +49,7 @@ export default function CadastroPage() {
           <input
             className={classesDeInput(errors.cpf)}
             inputMode="numeric"
+            autoComplete="off"
             placeholder="000.000.000-00"
             {...register('cpf', {
               required: 'Informe o CPF.',
@@ -59,6 +61,10 @@ export default function CadastroPage() {
         <Campo label="E-mail" erro={errors.email?.message}>
           <input
             type="email"
+            inputMode="email"
+            autoComplete="email"
+            spellCheck={false}
+            placeholder="nome@exemplo.com"
             className={classesDeInput(errors.email)}
             {...register('email', {
               required: 'Informe o e-mail.',
@@ -94,11 +100,6 @@ export default function CadastroPage() {
           Cadastrar
         </Botao>
       </form>
-      <div className="mt-4 text-center text-sm">
-        <Link to="/login" className="text-gray-500 hover:underline">
-          Voltar
-        </Link>
-      </div>
     </CartaoAuth>
   )
 }

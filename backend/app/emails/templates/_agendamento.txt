@@ -1,0 +1,6 @@
+    Quadra: {{ agendamento.quadra }} ({{ agendamento.esporte }})
+{% if mostrar_endereco | default(true) %}
+    Endereço: {{ agendamento.endereco }} — {{ agendamento.bairro }}
+{% endif %}
+    {{ rotulo_data | default("Data") }}: {{ agendamento.data }} ({{ agendamento.dia_semana }})
+    {{ rotulo_horario | default("Horário") }}: {{ agendamento.inicio }} às {{ agendamento.fim }}

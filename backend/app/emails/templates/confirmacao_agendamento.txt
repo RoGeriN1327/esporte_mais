@@ -1,0 +1,10 @@
+{% extends "base.txt" %}
+{% block conteudo %}
+Olá, {{ nome }}!
+
+Seu agendamento foi confirmado com sucesso:
+
+{% include "_agendamento.txt" %}
+
+Bom jogo! Se não puder comparecer, cancele pelo Esporte+ com antecedência para liberar o horário a outra pessoa.
+{% endblock %}

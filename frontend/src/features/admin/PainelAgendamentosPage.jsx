@@ -1,21 +1,44 @@
+// Gerenciar agendamentos (RF004: painel administrativo com visão consolidada de todos os
+// agendamentos, com opções de edição — remarcação — e cancelamento; e agendamento em nome do cidadão).
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { TbCalendarSearch, TbClock, TbPlus } from 'react-icons/tb'
 
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
+import IconeEsporte from '../../components/IconeEsporte'
+import {
+  BarraAcoes,
+  BotoesFiltro,
+  CabecalhoPagina,
+  ItemClicavel,
+  ListaClicavel,
+  ListaDetalhes,
+  PainelFiltros,
+  ResultadoConsulta,
+} from '../../components/Pagina'
 import SeletorDataHorario from '../../components/SeletorDataHorario'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Badge, Botao, Campo, Carregando, Modal } from '../../components/ui'
+import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
+import { useConsultaNaUrl } from '../../hooks/useConsultaNaUrl'
 import { cpfValido, mascararCpf, somenteDigitos } from '../../utils/cpf'
-import { formatarData, formatarHora } from '../../utils/datas'
+import { dataExtensa, formatarDataHora, formatarHora, partesDaData } from '../../utils/datas'
 
-const FILTROS_VAZIOS = { data: '', nome_quadra: '', status: '', cpf_usuario: '', nome_usuario: '' }
+const CHAVES = ['data', 'nome_quadra', 'status', 'cpf_usuario', 'nome_usuario']
 const STATUS = ['Confirmado', 'Cancelado', 'Concluído', 'Renovado']
+
+function ResumoAgendamento({ agendamento }) {
+  return (
+    <p className="rounded-lg bg-cinza-50 px-3.5 py-3 text-sm text-cinza-700">
+      <strong className="text-cinza-900">{agendamento.nome_usuario}</strong> · {agendamento.nome_quadra} ({agendamento.esporte}) ·{' '}
+      {dataExtensa(agendamento.data_hora_inicio)}, às <span className="tabular-nums">{formatarHora(agendamento.data_hora_inicio)}</span>
+    </p>
+  )
+}
 
 export default function PainelAgendamentosPage() {
   const queryClient = useQueryClient()
-  const [formulario, setFormulario] = useState(FILTROS_VAZIOS)
-  const [filtros, setFiltros] = useState(FILTROS_VAZIOS)
+  const consulta = useConsultaNaUrl(CHAVES)
   const [mensagem, setMensagem] = useState('')
   const [erroModal, setErroModal] = useState('')
   const [modal, setModal] = useState(null)
@@ -24,24 +47,21 @@ export default function PainelAgendamentosPage() {
   const [dataSelecionada, setDataSelecionada] = useState('')
   const [horaSelecionada, setHoraSelecionada] = useState('')
 
-  const { data: agendamentos, isLoading } = useQuery({
-    queryKey: ['admin-agendamentos', filtros],
-    queryFn: () =>
-      adminApi.painelAgendamentos({
-        data: filtros.data || undefined,
-        nome_quadra: filtros.nome_quadra || undefined,
-        status: filtros.status || undefined,
-        cpf_usuario: somenteDigitos(filtros.cpf_usuario) || undefined,
-        nome_usuario: filtros.nome_usuario || undefined,
-      }),
-  })
-  const { data: quadras } = useQuery({
-    queryKey: ['admin-quadras'],
-    queryFn: () => adminApi.listarQuadrasAdmin(),
-  })
-  const quadrasAtivas = (quadras || []).filter((quadra) => quadra.status === 'Ativa')
+  const parametros = { ...consulta.parametrosApi }
+  if (parametros.cpf_usuario) parametros.cpf_usuario = somenteDigitos(parametros.cpf_usuario)
 
-  function abrirModal(config) {
+  const { data: agendamentos, isFetching, isError } = useQuery({
+    queryKey: ['admin-agendamentos', parametros],
+    queryFn: () => adminApi.painelAgendamentos(parametros),
+    enabled: consulta.consultado,
+  })
+  const { data: quadrasAtivas } = useQuery({
+    queryKey: ['admin-quadras', {}],
+    queryFn: () => adminApi.listarQuadrasAdmin(),
+    select: (todas) => todas.filter((quadra) => quadra.status === 'Ativa'),
+  })
+
+  function abrir(config) {
     setErroModal('')
     setDataSelecionada('')
     setHoraSelecionada('')
@@ -50,11 +70,10 @@ export default function PainelAgendamentosPage() {
     setModal(config)
   }
 
-  function aoMutacaoConcluida(mensagemSucesso) {
+  function aoTerminar(mensagemSucesso) {
     return {
       onSuccess: () => {
         setMensagem(mensagemSucesso)
-        setErroModal('')
         setModal(null)
         queryClient.invalidateQueries({ queryKey: ['admin-agendamentos'] })
       },
@@ -64,176 +83,165 @@ export default function PainelAgendamentosPage() {
 
   const criar = useMutation({
     mutationFn: () =>
-      adminApi.criarAgendamentoAdmin({
-        cpfUsuario: cpfNovo,
-        idQuadra: Number(quadraNova),
-        data: dataSelecionada,
-        horaInicio: horaSelecionada,
-      }),
-    ...aoMutacaoConcluida('Agendamento criado. O cidadão foi notificado por e-mail.'),
+      adminApi.criarAgendamentoAdmin({ cpfUsuario: cpfNovo, idQuadra: Number(quadraNova), data: dataSelecionada, horaInicio: horaSelecionada }),
+    ...aoTerminar('Agendamento criado. O cidadão foi notificado por e-mail.'),
   })
-
   const remarcar = useMutation({
-    mutationFn: () =>
-      adminApi.remarcarAgendamento(modal.agendamento.id, {
-        data: dataSelecionada,
-        horaInicio: horaSelecionada,
-      }),
-    ...aoMutacaoConcluida('Agendamento remarcado. O cidadão foi notificado por e-mail.'),
+    mutationFn: () => adminApi.remarcarAgendamento(modal.agendamento.id, { data: dataSelecionada, horaInicio: horaSelecionada }),
+    ...aoTerminar('Agendamento remarcado. O cidadão foi notificado por e-mail.'),
   })
-
   const cancelar = useMutation({
     mutationFn: () => adminApi.cancelarAgendamentoAdmin(modal.agendamento.id),
-    ...aoMutacaoConcluida('Agendamento cancelado. O cidadão foi notificado por e-mail.'),
+    ...aoTerminar('Agendamento cancelado. O cidadão foi notificado por e-mail.'),
   })
 
-  function atualizarCampo(campo, valor) {
-    setFormulario((atual) => ({ ...atual, [campo]: valor }))
-  }
+  const detalhe = modal?.modo === 'detalhes' ? modal.agendamento : null
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-800">Painel de agendamentos</h1>
-        <Botao onClick={() => abrirModal({ modo: 'novo' })}>Novo agendamento</Botao>
-      </div>
-
-      {/* Filtros */}
-      <form
-        className="grid gap-4 rounded-xl bg-white p-4 shadow sm:grid-cols-2 lg:grid-cols-6"
-        onSubmit={(evento) => {
-          evento.preventDefault()
-          setFiltros(formulario)
-        }}
-      >
-        <Campo label="Data">
-          <input
-            type="date"
-            className={classesDeInput(false)}
-            value={formulario.data}
-            onChange={(evento) => atualizarCampo('data', evento.target.value)}
-          />
-        </Campo>
-        <Campo label="Quadra">
-          <input
-            className={classesDeInput(false)}
-            value={formulario.nome_quadra}
-            onChange={(evento) => atualizarCampo('nome_quadra', evento.target.value)}
-          />
-        </Campo>
-        <Campo label="Status">
-          <select
-            className={classesDeInput(false)}
-            value={formulario.status}
-            onChange={(evento) => atualizarCampo('status', evento.target.value)}
-          >
-            <option value="">Todos</option>
-            {STATUS.map((status) => (
-              <option key={status} value={status}>
-                {status}
-              </option>
-            ))}
-          </select>
-        </Campo>
-        <Campo label="CPF do cidadão">
-          <input
-            className={classesDeInput(false)}
-            inputMode="numeric"
-            value={formulario.cpf_usuario}
-            onChange={(evento) => atualizarCampo('cpf_usuario', mascararCpf(evento.target.value))}
-          />
-        </Campo>
-        <Campo label="Nome do cidadão">
-          <input
-            className={classesDeInput(false)}
-            value={formulario.nome_usuario}
-            onChange={(evento) => atualizarCampo('nome_usuario', evento.target.value)}
-          />
-        </Campo>
-        <div className="flex items-end gap-2">
-          <Botao type="submit" className="flex-1">
-            Buscar
+    <div>
+      <CabecalhoPagina
+        voltarPara="/admin"
+        voltarTexto="Início"
+        titulo="Gerenciar agendamentos"
+        descricao="Consulte os agendamentos de todas as quadras. Abra um agendamento para ver os detalhes, remarcar ou cancelar."
+        acoes={
+          <Botao onClick={() => abrir({ modo: 'novo' })}>
+            <TbPlus aria-hidden="true" className="size-[18px]" />
+            Novo agendamento
           </Botao>
-          <Botao
-            type="button"
-            variante="secundario"
-            onClick={() => {
-              setFormulario(FILTROS_VAZIOS)
-              setFiltros(FILTROS_VAZIOS)
-            }}
-          >
-            Limpar
-          </Botao>
-        </div>
-      </form>
+        }
+      />
 
-      <Alerta tipo="sucesso">{mensagem}</Alerta>
-
-      {isLoading ? (
-        <Carregando />
-      ) : (
-        <div className="overflow-x-auto rounded-xl bg-white shadow">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b bg-gray-50 text-xs uppercase text-gray-500">
-              <tr>
-                <th className="px-4 py-3">Cidadão</th>
-                <th className="px-4 py-3">Quadra</th>
-                <th className="px-4 py-3">Data / horário</th>
-                <th className="px-4 py-3">Status</th>
-                <th className="px-4 py-3 text-right">Ações</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {(agendamentos || []).map((agendamento) => (
-                <tr key={agendamento.id}>
-                  <td className="px-4 py-3">
-                    <p className="font-medium text-gray-800">{agendamento.nome_usuario}</p>
-                    <p className="text-xs text-gray-500">{mascararCpf(agendamento.cpf_usuario)}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    {agendamento.nome_quadra}{' '}
-                    <span className="text-gray-500">({agendamento.esporte})</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {formatarData(agendamento.data_hora_inicio)} ·{' '}
-                    {formatarHora(agendamento.data_hora_inicio)}–{formatarHora(agendamento.data_hora_fim)}
-                  </td>
-                  <td className="px-4 py-3"><Badge>{agendamento.status}</Badge></td>
-                  <td className="px-4 py-3">
-                    {agendamento.status === 'Confirmado' && (
-                      <div className="flex justify-end gap-2">
-                        <Botao
-                          variante="secundario"
-                          onClick={() => abrirModal({ modo: 'remarcar', agendamento })}
-                        >
-                          Remarcar
-                        </Botao>
-                        <Botao
-                          variante="perigo"
-                          onClick={() => abrirModal({ modo: 'cancelar', agendamento })}
-                        >
-                          Cancelar
-                        </Botao>
-                      </div>
-                    )}
-                  </td>
-                </tr>
+      <div className="space-y-8">
+        <PainelFiltros
+          key={consulta.busca}
+          onBuscar={(dados) => consulta.buscar(Object.fromEntries(dados))}
+          botoes={<BotoesFiltro onLimpar={consulta.limpar} buscando={isFetching && consulta.consultado} />}
+        >
+          <Campo label="Data">
+            <input type="date" name="data" defaultValue={consulta.filtros.data} className={classesDeInput(false)} />
+          </Campo>
+          <Campo label="Quadra">
+            <input name="nome_quadra" defaultValue={consulta.filtros.nome_quadra} autoComplete="off" placeholder="Nome da quadra…" className={classesDeInput(false)} />
+          </Campo>
+          <Campo label="Status">
+            <select name="status" defaultValue={consulta.filtros.status} className={classesDeInput(false)}>
+              <option value="">Todos</option>
+              {STATUS.map((status) => (
+                <option key={status} value={status}>
+                  {status}
+                </option>
               ))}
-            </tbody>
-          </table>
-          {(agendamentos || []).length === 0 && (
-            <p className="py-8 text-center text-gray-500">Nenhum agendamento encontrado.</p>
-          )}
-        </div>
-      )}
-
-      {/* Modal: Novo agendamento */}
-      <Modal aberto={modal?.modo === 'novo'} titulo="Novo agendamento" onFechar={() => setModal(null)}>
-        <div className="space-y-4">
+            </select>
+          </Campo>
           <Campo label="CPF do cidadão">
             <input
-              className={classesDeInput(Boolean(cpfNovo) && !cpfValido(cpfNovo))}
+              name="cpf_usuario"
+              defaultValue={consulta.filtros.cpf_usuario}
               inputMode="numeric"
+              autoComplete="off"
+              placeholder="000.000.000-00"
+              onChange={(evento) => (evento.target.value = mascararCpf(evento.target.value))}
+              className={`${classesDeInput(false)} tabular-nums`}
+            />
+          </Campo>
+          <Campo label="Nome do cidadão">
+            <input name="nome_usuario" defaultValue={consulta.filtros.nome_usuario} autoComplete="off" placeholder="Nome completo ou parte…" className={classesDeInput(false)} />
+          </Campo>
+        </PainelFiltros>
+
+        <Alerta tipo="sucesso">{mensagem}</Alerta>
+
+        <ResultadoConsulta
+          consultado={consulta.consultado}
+          carregando={isFetching && !agendamentos}
+          erro={isError && 'Não foi possível buscar os agendamentos. Tente novamente em instantes.'}
+          vazio={!agendamentos?.length}
+          inicial={{
+            Icone: TbCalendarSearch,
+            titulo: 'Consulte os agendamentos',
+            descricao: 'Filtre por data, quadra, status ou cidadão e clique em “Buscar”. Para listar todos, clique em “Buscar” sem preencher nada.',
+          }}
+          textoCarregando="Buscando agendamentos…"
+          tituloVazio="Nenhum agendamento encontrado"
+          descricaoVazio="Não há agendamentos com esses filtros. Altere a busca ou use “Limpar filtros” para ver todos."
+        >
+          <ListaClicavel titulo="Agendamentos" total={agendamentos?.length} rotuloSingular="agendamento" rotuloPlural="agendamentos">
+            {agendamentos?.map((agendamento) => {
+              const { dia, mes } = partesDaData(agendamento.data_hora_inicio)
+              return (
+                <ItemClicavel key={agendamento.id} onClick={() => abrir({ modo: 'detalhes', agendamento })}>
+                  <span className="flex w-12 shrink-0 flex-col items-center rounded-lg border border-cinza-200 py-1.5">
+                    <span className="text-lg font-black leading-none tabular-nums text-cinza-900">{dia}</span>
+                    <span className="mt-0.5 text-[11px] font-bold uppercase text-cinza-500">{mes}</span>
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-extrabold text-cinza-900">{agendamento.nome_usuario}</span>
+                    <span className="mt-0.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-cinza-600">
+                      <span className="inline-flex items-center gap-1 font-semibold tabular-nums text-cinza-800">
+                        <TbClock aria-hidden="true" className="size-4 text-cinza-400" />
+                        {formatarHora(agendamento.data_hora_inicio)}–{formatarHora(agendamento.data_hora_fim)}
+                      </span>
+                      <span className="inline-flex min-w-0 items-center gap-1">
+                        <IconeEsporte esporte={agendamento.esporte} className="size-4 shrink-0 text-cinza-400" />
+                        <span className="truncate">{agendamento.nome_quadra}</span>
+                      </span>
+                    </span>
+                  </span>
+                  <Badge>{agendamento.status}</Badge>
+                </ItemClicavel>
+              )
+            })}
+          </ListaClicavel>
+        </ResultadoConsulta>
+      </div>
+
+      <Modal aberto={Boolean(detalhe)} titulo="Detalhes do agendamento" onFechar={() => setModal(null)}>
+        {detalhe && (
+          <div className="space-y-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="break-words text-lg font-extrabold text-cinza-900">{detalhe.nome_usuario}</p>
+                <p className="text-sm tabular-nums text-cinza-600">CPF {mascararCpf(detalhe.cpf_usuario)}</p>
+              </div>
+              <Badge>{detalhe.status}</Badge>
+            </div>
+            <ListaDetalhes
+              linhas={[
+                { rotulo: 'Quadra', valor: detalhe.nome_quadra },
+                { rotulo: 'Esporte', valor: detalhe.esporte },
+                { rotulo: 'Bairro', valor: detalhe.bairro },
+                { rotulo: 'Data', valor: dataExtensa(detalhe.data_hora_inicio), classe: 'first-letter:uppercase' },
+                { rotulo: 'Horário', valor: `${formatarHora(detalhe.data_hora_inicio)} às ${formatarHora(detalhe.data_hora_fim)}`, classe: 'tabular-nums' },
+                { rotulo: 'Solicitado em', valor: formatarDataHora(detalhe.data_criacao), classe: 'tabular-nums' },
+                { rotulo: 'Origem', valor: detalhe.id_admin_responsavel ? 'Administração' : 'Cidadão' },
+                { rotulo: 'Código', valor: `#${detalhe.id}`, classe: 'tabular-nums' },
+              ]}
+            />
+            <BarraAcoes>
+              <Botao variante="secundario" onClick={() => setModal(null)}>
+                Fechar
+              </Botao>
+              {detalhe.status === 'Confirmado' && (
+                <>
+                  <Botao variante="perigoContorno" onClick={() => abrir({ modo: 'cancelar', agendamento: detalhe })}>
+                    Cancelar agendamento
+                  </Botao>
+                  <Botao onClick={() => abrir({ modo: 'remarcar', agendamento: detalhe })}>Remarcar</Botao>
+                </>
+              )}
+            </BarraAcoes>
+          </div>
+        )}
+      </Modal>
+
+      <Modal aberto={modal?.modo === 'novo'} titulo="Novo agendamento" onFechar={() => setModal(null)}>
+        <div className="space-y-5">
+          <Campo label="CPF do cidadão" erro={cpfNovo.length === 14 && !cpfValido(cpfNovo) ? 'CPF inválido. Confira os 11 dígitos.' : ''}>
+            <input
+              className={`${classesDeInput(cpfNovo.length === 14 && !cpfValido(cpfNovo))} tabular-nums`}
+              inputMode="numeric"
+              autoComplete="off"
               placeholder="000.000.000-00"
               value={cpfNovo}
               onChange={(evento) => setCpfNovo(mascararCpf(evento.target.value))}
@@ -249,8 +257,8 @@ export default function PainelAgendamentosPage() {
                 setHoraSelecionada('')
               }}
             >
-              <option value="">Selecione...</option>
-              {quadrasAtivas.map((quadra) => (
+              <option value="">Selecione…</option>
+              {(quadrasAtivas ?? []).map((quadra) => (
                 <option key={quadra.id} value={quadra.id}>
                   {quadra.nome} — {quadra.esporte} ({quadra.bairro})
                 </option>
@@ -267,7 +275,7 @@ export default function PainelAgendamentosPage() {
             />
           )}
           <Alerta tipo="erro">{erroModal}</Alerta>
-          <div className="flex justify-end gap-3">
+          <BarraAcoes separada>
             <Botao variante="secundario" onClick={() => setModal(null)}>
               Cancelar
             </Botao>
@@ -278,20 +286,14 @@ export default function PainelAgendamentosPage() {
             >
               Confirmar agendamento
             </Botao>
-          </div>
+          </BarraAcoes>
         </div>
       </Modal>
 
-      {/* Modal: Remarcar agendamento */}
       <Modal aberto={modal?.modo === 'remarcar'} titulo="Remarcar agendamento" onFechar={() => setModal(null)}>
-        {modal?.agendamento && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              <strong>{modal.agendamento.nome_usuario}</strong> ·{' '}
-              {modal.agendamento.nome_quadra} ({modal.agendamento.esporte}) · atualmente em{' '}
-              {formatarData(modal.agendamento.data_hora_inicio)} às{' '}
-              {formatarHora(modal.agendamento.data_hora_inicio)}
-            </p>
+        {modal?.modo === 'remarcar' && (
+          <div className="space-y-5">
+            <ResumoAgendamento agendamento={modal.agendamento} />
             <SeletorDataHorario
               quadraId={modal.agendamento.id_quadra}
               data={dataSelecionada}
@@ -300,42 +302,32 @@ export default function PainelAgendamentosPage() {
               onMudarHora={setHoraSelecionada}
             />
             <Alerta tipo="erro">{erroModal}</Alerta>
-            <div className="flex justify-end gap-3">
+            <BarraAcoes separada>
               <Botao variante="secundario" onClick={() => setModal(null)}>
                 Cancelar
               </Botao>
-              <Botao
-                onClick={() => remarcar.mutate()}
-                carregando={remarcar.isPending}
-                disabled={!dataSelecionada || !horaSelecionada}
-              >
+              <Botao onClick={() => remarcar.mutate()} carregando={remarcar.isPending} disabled={!dataSelecionada || !horaSelecionada}>
                 Confirmar remarcação
               </Botao>
-            </div>
+            </BarraAcoes>
           </div>
         )}
       </Modal>
 
-      {/* Modal: Cancelar agendamento */}
       <Modal aberto={modal?.modo === 'cancelar'} titulo="Cancelar agendamento" onFechar={() => setModal(null)}>
-        {modal?.agendamento && (
-          <div className="space-y-4">
-            <p className="text-sm text-gray-600">
-              Cancelar o agendamento de <strong>{modal.agendamento.nome_usuario}</strong> em{' '}
-              <strong>{modal.agendamento.nome_quadra}</strong> no dia{' '}
-              {formatarData(modal.agendamento.data_hora_inicio)} às{' '}
-              {formatarHora(modal.agendamento.data_hora_inicio)}? O cidadão será notificado por
-              e-mail.
-            </p>
+        {modal?.modo === 'cancelar' && (
+          <div className="space-y-5">
+            <ResumoAgendamento agendamento={modal.agendamento} />
+            <p className="text-[15px] text-cinza-700">Confirma o cancelamento? O horário será liberado e o cidadão será notificado por e-mail.</p>
             <Alerta tipo="erro">{erroModal}</Alerta>
-            <div className="flex justify-end gap-3">
+            <BarraAcoes>
               <Botao variante="secundario" onClick={() => setModal(null)}>
                 Voltar
               </Botao>
               <Botao variante="perigo" onClick={() => cancelar.mutate()} carregando={cancelar.isPending}>
                 Confirmar cancelamento
               </Botao>
-            </div>
+            </BarraAcoes>
           </div>
         )}
       </Modal>

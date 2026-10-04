@@ -141,11 +141,17 @@ def caixa_de_email(monkeypatch):
     enviados: list[dict] = []
     original = EmailService.enviar
 
-    def enviar_e_capturar(self, destinatario, assunto, corpo, evento="geral"):
+    def enviar_e_capturar(self, destinatario, assunto, corpo, evento="geral", html=None):
         enviados.append(
-            {"para": destinatario, "assunto": assunto, "corpo": corpo, "evento": evento}
+            {
+                "para": destinatario,
+                "assunto": assunto,
+                "corpo": corpo,
+                "evento": evento,
+                "html": html,
+            }
         )
-        return original(self, destinatario, assunto, corpo, evento)
+        return original(self, destinatario, assunto, corpo, evento, html)
 
     monkeypatch.setattr(EmailService, "enviar", enviar_e_capturar)
     return enviados

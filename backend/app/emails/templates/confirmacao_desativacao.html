@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import etiqueta, titulo %}
+{% block conteudo %}
+{{ etiqueta("Conta desativada", "neutro") }}
+{{ titulo("Sua conta foi desativada") }}
+<p style="margin:12px 0 0; font-size:16px; line-height:25px; color:#36443c;">
+  Olá, <strong style="color:#0f1f17;">{{ nome }}</strong>. Confirmamos a desativação da sua conta no Esporte+.
+</p>
+<p style="margin:16px 0 0; font-size:15px; line-height:24px; color:#36443c;">
+  Seu histórico de agendamentos foi preservado. Se quiser voltar a usar o sistema, a reativação pode ser solicitada à
+  Secretaria Municipal de Esportes.
+</p>
+{% endblock %}

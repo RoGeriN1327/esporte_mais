@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="supported-color-schemes" content="light">
+  <title>{{ assunto }}</title>
+  {# Clientes como Apple Mail carregam a Mulish; os demais usam Arial (mesma proporção). #}
+  <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@400;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 0; -webkit-text-size-adjust: 100%; }
+    table { border-collapse: collapse; }
+    img { border: 0; outline: none; text-decoration: none; }
+    a { color: #0f5c30; }
+    @media (max-width: 620px) {
+      .cartao { padding: 24px 20px !important; }
+      .externo { padding: 20px 12px !important; }
+    }
+  </style>
+</head>
+<body style="margin:0; padding:0; background-color:#f6f8f7;">
+  {# Texto de pré-visualização exibido ao lado do assunto na caixa de entrada #}
+  <div style="display:none; max-height:0; overflow:hidden; opacity:0; color:transparent;">{{ preview }}</div>
+
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f6f8f7;">
+    <tr>
+      <td align="center" class="externo" style="padding:32px 16px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px; font-family:'Mulish', Arial, Helvetica, sans-serif; color:#0f1f17;">
+          <tr>
+            <td style="padding:0 4px 20px;">
+              <a href="{{ url_sistema }}" target="_blank" style="text-decoration:none;">
+                <img src="{{ url_logo }}" width="157" height="40" alt="Esporte+" style="display:block; width:157px; height:40px; font-size:24px; font-weight:800; color:#13703a;">
+              </a>
+            </td>
+          </tr>
+          <tr>
+            <td style="background-color:#ffffff; border:1px solid #dce3df; border-radius:16px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr><td style="height:5px; background-color:#13703a; border-radius:16px 16px 0 0; font-size:0; line-height:0;">&nbsp;</td></tr>
+                <tr>
+                  <td class="cartao" style="padding:32px 36px;">
+                    {% block conteudo %}{% endblock %}
+                    <p style="margin:28px 0 0; font-size:15px; line-height:24px; color:#36443c;">
+                      Equipe <strong style="color:#0f1f17;">Esporte+</strong>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:24px 16px 0; font-size:12px; line-height:19px; color:#66766d;">
+              Secretaria Municipal de Esportes · Rio Verde – GO<br>
+              Este é um e-mail automático do Esporte+. Não é necessário respondê-lo.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

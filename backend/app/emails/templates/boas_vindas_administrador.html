@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import etiqueta, titulo, destaque, botao %}
+{% block conteudo %}
+{{ etiqueta("Conta administrativa criada") }}
+{{ titulo("Boas-vindas à equipe do Esporte+") }}
+<p style="margin:12px 0 0; font-size:16px; line-height:25px; color:#36443c;">
+  Olá, <strong style="color:#0f1f17;">{{ nome }}</strong>! Sua conta administrativa com perfil <strong style="color:#0f1f17;">{{ perfil }}</strong>
+  foi criada. Para entrar, use o e-mail <strong style="color:#0f1f17;">{{ email }}</strong> e a senha temporária abaixo:
+</p>
+{{ destaque("Senha temporária", senha) }}
+{{ botao(url_sistema ~ "/login", "Acessar o painel") }}
+<p style="margin:24px 0 0; font-size:14px; line-height:22px; color:#66766d;">
+  Recomendamos trocar a senha depois do primeiro acesso, pela opção “Esqueci minha senha” na tela de login.
+</p>
+{% endblock %}

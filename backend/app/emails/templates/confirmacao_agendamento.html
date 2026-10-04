@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% from "_componentes.html" import etiqueta, titulo %}
+{% block conteudo %}
+{{ etiqueta("Agendamento confirmado") }}
+{{ titulo("Sua quadra está reservada") }}
+<p style="margin:12px 0 0; font-size:16px; line-height:25px; color:#36443c;">
+  Olá, <strong style="color:#0f1f17;">{{ nome }}</strong>! Seu agendamento foi confirmado com sucesso. Confira os dados da reserva:
+</p>
+{% include "_agendamento.html" %}
+<p style="margin:24px 0 0; font-size:15px; line-height:24px; color:#36443c;">
+  Bom jogo! Se não puder comparecer, cancele pelo Esporte+ com antecedência para liberar o horário a outra pessoa.
+</p>
+{% endblock %}

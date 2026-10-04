@@ -30,21 +30,26 @@ export default function RecuperarSenhaPage() {
 
   return (
     <CartaoAuth
+      voltarPara="/login"
       titulo="Recuperar senha"
       subtitulo="Informe o e-mail e o CPF cadastrados para receber o link de redefinição (válido por 1 hora)."
     >
       {mensagem ? (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <Alerta tipo="sucesso">{mensagem}</Alerta>
-          <Link to="/login" className="block text-center text-sm text-gray-500 hover:underline">
+          <Link to="/login" className="flex h-11 w-full items-center justify-center rounded-lg border border-cinza-300 text-sm font-bold text-cinza-800 transition-colors hover:border-cinza-400 hover:bg-cinza-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-600">
             Voltar para o login
           </Link>
         </div>
       ) : (
-        <form className="space-y-4" onSubmit={handleSubmit(aoEnviar)} noValidate>
+        <form className="space-y-5" onSubmit={handleSubmit(aoEnviar)} noValidate>
           <Campo label="E-mail" erro={errors.email?.message}>
             <input
               type="email"
+              inputMode="email"
+              autoComplete="email"
+              spellCheck={false}
+              placeholder="nome@exemplo.com"
               className={classesDeInput(errors.email)}
               {...register('email', { required: 'Informe o e-mail.' })}
             />
@@ -53,6 +58,7 @@ export default function RecuperarSenhaPage() {
             <input
               className={classesDeInput(errors.cpf)}
               inputMode="numeric"
+              autoComplete="off"
               placeholder="000.000.000-00"
               {...register('cpf', {
                 required: 'Informe o CPF.',
@@ -65,9 +71,6 @@ export default function RecuperarSenhaPage() {
           <Botao type="submit" carregando={enviando} className="w-full">
             Enviar link
           </Botao>
-          <Link to="/login" className="block text-center text-sm text-gray-500 hover:underline">
-            Voltar
-          </Link>
         </form>
       )}
     </CartaoAuth>

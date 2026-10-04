@@ -1,0 +1,12 @@
+{% extends "base.txt" %}
+{% block conteudo %}
+Olá, {{ nome }}!
+
+Recebemos uma solicitação para redefinir a senha da sua conta no Esporte+.
+
+Para criar uma nova senha, acesse o link abaixo (válido por 1 hora, de uso único):
+
+    {{ link }}
+
+Se você não fez esta solicitação, ignore este e-mail. Sua senha continuará a mesma.
+{% endblock %}

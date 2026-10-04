@@ -34,7 +34,7 @@ export default function RedefinirSenhaPage() {
   return (
     <CartaoAuth titulo="Redefinir senha" subtitulo="Crie a sua nova senha de acesso.">
       {!token && <Alerta tipo="aviso">Link inválido. Solicite uma nova recuperação de senha.</Alerta>}
-      <form className="mt-3 space-y-4" onSubmit={handleSubmit(aoSalvar)} noValidate>
+      <form className="mt-5 space-y-5" onSubmit={handleSubmit(aoSalvar)} noValidate>
         <Campo label="Nova senha" erro={errors.novaSenha?.message}>
           <input
             type="password"
@@ -62,7 +62,7 @@ export default function RedefinirSenhaPage() {
         <Botao type="submit" carregando={enviando} disabled={!token} className="w-full">
           Salvar nova senha
         </Botao>
-        <Link to="/login" className="block text-center text-sm text-gray-500 hover:underline">
+        <Link to="/login" className="flex h-11 w-full items-center justify-center rounded-lg border border-cinza-300 text-sm font-bold text-cinza-800 transition-colors hover:border-cinza-400 hover:bg-cinza-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-600">
           Cancelar
         </Link>
       </form>

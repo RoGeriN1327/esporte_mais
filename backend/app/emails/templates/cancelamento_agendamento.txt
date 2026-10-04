@@ -1,0 +1,11 @@
+{% extends "base.txt" %}
+{% block conteudo %}
+{% set mostrar_endereco = false %}
+Olá, {{ nome }}.
+
+Seu agendamento foi cancelado:
+
+{% include "_agendamento.txt" %}
+
+O horário foi liberado para outras pessoas. Quando quiser, você pode fazer uma nova reserva pelo Esporte+.
+{% endblock %}
