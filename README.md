@@ -154,6 +154,13 @@ docker compose exec frontend npm run lint          # ESLint
 Os testes de integração usam o banco `esporte_mais_test`, criado e migrado
 automaticamente — o banco de desenvolvimento não é tocado.
 
+### GitHub Actions
+
+| Workflow | Quando roda | O que faz |
+|----------|-------------|-----------|
+| `.github/workflows/ci.yml` | Todo pull request e todo push na `main` | Backend: Ruff + pytest (com PostgreSQL 16 no próprio job). Frontend: ESLint, Vitest e build. A ruleset da `main` exige os dois jobs verdes para o merge. |
+| `.github/workflows/manter-api-acordada.yml` | A cada 10 min, das 6h às 23h50 (Brasília) | Chama `/health` da API para o Render (plano gratuito) não hibernar o serviço. Pode ser executado manualmente na aba **Actions**. |
+
 ---
 
 ## 5. Quando der erro — onde olhar
