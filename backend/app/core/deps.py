@@ -5,6 +5,7 @@ Use os aliases nos parâmetros das rotas para exigir o tipo de usuário:
     PessoaLogada   somente Usuário Pessoa (cidadão)
     AdminLogado    Gestor ou Operador
     GestorLogado   somente Gestor
+    IpLiberado     rotas públicas de autenticação: recusa IPs bloqueados
 """
 
 from dataclasses import dataclass
@@ -12,15 +13,17 @@ from datetime import UTC, datetime
 from typing import Annotated
 
 import jwt as pyjwt
-from fastapi import Depends
+from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.orm import Session
 
 from app.core import security
 from app.core.database import get_db
-from app.exceptions import AcessoNegado, ContaDesativada, NaoAutenticado
+from app.core.rate_limit import ip_do_cliente
+from app.exceptions import AcessoNegado, ContaDesativada, IpBloqueado, NaoAutenticado
 from app.models import PerfilAdministrativo, StatusUsuario, TipoUsuario
 from app.repositories import (
+    SegurancaRepository,
     TokenRepository,
     UsuarioAdministrativoRepository,
     UsuarioPessoaRepository,
@@ -29,6 +32,23 @@ from app.repositories import (
 bearer_scheme = HTTPBearer(auto_error=False, description="Access token JWT (Authorization: Bearer)")
 
 SessaoDb = Annotated[Session, Depends(get_db)]
+
+MSG_IP_BLOQUEADO = (
+    "Acesso bloqueado por excesso de tentativas de login. "
+    "Procure a Secretaria Municipal de Esportes."
+)
+
+
+def get_ip_liberado(request: Request, db: SessaoDb) -> str:
+    """IP do cliente nas rotas públicas de autenticação; recusa IPs bloqueados."""
+    ip = ip_do_cliente(request)
+    if SegurancaRepository(db).ip_esta_bloqueado(ip):
+        raise IpBloqueado(MSG_IP_BLOQUEADO)
+    return ip
+
+
+# Use nas rotas públicas de autenticação (login, cadastro, recuperação de senha).
+IpLiberado = Annotated[str, Depends(get_ip_liberado)]
 
 
 @dataclass

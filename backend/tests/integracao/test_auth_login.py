@@ -3,10 +3,11 @@
 Regras verificadas:
   * login de Usuário Pessoa e de Usuário Administrativo com e-mail e senha;
   * mensagem genérica para e-mail inexistente ou senha errada (anti-enumeração);
-  * bloqueio de 15 minutos após 5 tentativas erradas consecutivas;
+  * bloqueio de 1 hora após 3 tentativas erradas consecutivas;
   * contador zerado após login bem-sucedido ou fim do bloqueio;
   * conta desativada não acessa o sistema;
-  * rate limit de 10 requisições por minuto no login.
+  * rate limit de 5 requisições por minuto no login;
+  * IP com login recusado em 5 contas diferentes em 24h é bloqueado sem prazo.
 """
 
 from datetime import timedelta
@@ -91,31 +92,29 @@ class TestCredenciaisInvalidas:
 
 
 class TestBloqueioPorTentativas:
-    def test_quinta_tentativa_errada_bloqueia_a_conta_por_15_minutos(self, client, db):
+    def test_terceira_tentativa_errada_bloqueia_a_conta_por_1_hora(self, client, db):
         pessoa = criar_pessoa(db)
-        for tentativa in range(1, 5):
+        for tentativa in range(1, 3):
             assert _login(client, pessoa.email, "errada").status_code == 401
             db.refresh(pessoa)
             assert (pessoa.tentativas_login, pessoa.bloqueado_ate) == (tentativa, None)
 
         assert _login(client, pessoa.email, "errada").status_code == 401
         db.refresh(pessoa)
-        assert pessoa.tentativas_login == 5
-        assert pessoa.bloqueado_ate == AGORA + timedelta(minutes=15)
+        assert pessoa.tentativas_login == 3
+        assert pessoa.bloqueado_ate == AGORA + timedelta(hours=1)
 
         # Bloqueada, a conta recusa até a senha correta.
         resposta = _login(client, pessoa.email, SENHA_PADRAO)
         assert resposta.status_code == 423
         assert resposta.json() == {"detail": MSG_BLOQUEADA}
 
-    def test_bloqueio_dura_exatamente_15_minutos_e_depois_zera_o_contador(
-        self, client, db, relogio
-    ):
+    def test_bloqueio_dura_exatamente_1_hora_e_depois_zera_o_contador(self, client, db, relogio):
         pessoa = criar_pessoa(db)
-        for _ in range(5):
+        for _ in range(3):
             _login(client, pessoa.email, "errada")
 
-        relogio.shift(timedelta(minutes=14, seconds=59))
+        relogio.shift(timedelta(minutes=59, seconds=59))
         assert _login(client, pessoa.email).status_code == 423
 
         relogio.shift(timedelta(seconds=1))
@@ -125,9 +124,9 @@ class TestBloqueioPorTentativas:
 
     def test_erro_apos_fim_do_bloqueio_recomeca_contagem_do_zero(self, client, db, relogio):
         pessoa = criar_pessoa(db)
-        for _ in range(5):
+        for _ in range(3):
             _login(client, pessoa.email, "errada")
-        relogio.shift(timedelta(minutes=16))
+        relogio.shift(timedelta(minutes=61))
 
         assert _login(client, pessoa.email, "errada").status_code == 401
         db.refresh(pessoa)
@@ -136,21 +135,21 @@ class TestBloqueioPorTentativas:
 
     def test_login_correto_antes_do_limite_zera_o_contador(self, client, db):
         pessoa = criar_pessoa(db)
-        for _ in range(4):
+        for _ in range(2):
             _login(client, pessoa.email, "errada")
         assert _login(client, pessoa.email).status_code == 200
         db.refresh(pessoa)
         assert pessoa.tentativas_login == 0
 
-        # Depois de zerado, são necessárias mais 5 falhas para bloquear.
-        for _ in range(4):
+        # Depois de zerado, são necessárias mais 3 falhas para bloquear.
+        for _ in range(2):
             _login(client, pessoa.email, "errada")
         assert _login(client, pessoa.email).status_code == 200
 
     def test_bloqueio_e_por_conta_e_vale_tambem_para_administradores(self, client, db):
         admin = criar_admin(db)
         outro = criar_pessoa(db)
-        for _ in range(5):
+        for _ in range(3):
             _login(client, admin.email, "errada")
         assert _login(client, admin.email).status_code == 423
         assert _login(client, outro.email).status_code == 200
@@ -168,13 +167,13 @@ def test_conta_desativada_nao_acessa_e_senha_errada_nao_revela_o_status(client, 
         assert (resposta.status_code, resposta.json()) == (401, {"detail": MSG_CREDENCIAIS})
 
 
-def test_mais_de_10_logins_por_minuto_do_mesmo_ip_retorna_429(client, db):
+def test_mais_de_5_logins_por_minuto_do_mesmo_ip_retorna_429(client, db):
     limiter.enabled = True
     limiter.reset()
     pessoa = criar_pessoa(db)
-    respostas = [_login(client, pessoa.email).status_code for _ in range(11)]
-    assert respostas[:10] == [200] * 10
-    assert respostas[10] == 429
+    respostas = [_login(client, pessoa.email).status_code for _ in range(6)]
+    assert respostas[:5] == [200] * 5
+    assert respostas[5] == 429
 
 
 def test_rate_limit_usa_o_ip_informado_pela_cloudflare(client, db):
@@ -190,6 +189,6 @@ def test_rate_limit_usa_o_ip_informado_pela_cloudflare(client, db):
             headers={"CF-Connecting-IP": ip},
         ).status_code
 
-    assert [tentar("200.1.1.1") for _ in range(11)][10] == 429
+    assert [tentar("200.1.1.1") for _ in range(6)][5] == 429
     # Outro cliente real (outro IP da Cloudflare) não é afetado pelo bloqueio do primeiro.
     assert tentar("200.2.2.2") == 401

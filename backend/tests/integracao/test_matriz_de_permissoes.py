@@ -59,6 +59,8 @@ ROTAS_PROTEGIDAS = [
     ("POST", "/admin/administradores/9999/desativar", GESTOR),
     ("GET", "/admin/configuracoes", GESTOR),
     ("PUT", "/admin/configuracoes", GESTOR),
+    ("GET", "/admin/ips-bloqueados", GESTOR),
+    ("DELETE", "/admin/ips-bloqueados/9999", GESTOR),
 ]
 
 ROTAS_PUBLICAS = [

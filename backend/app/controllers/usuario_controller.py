@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request, status
 
-from app.core.deps import PessoaLogada, SessaoDb
+from app.core.deps import IpLiberado, PessoaLogada, SessaoDb
 from app.core.rate_limit import limiter
 from app.schemas.auth import MensagemResponse
 from app.schemas.usuario import EmailUpdate, UsuarioPessoaCreate, UsuarioPessoaOut
@@ -20,7 +20,7 @@ router = APIRouter(prefix="/usuarios", tags=["Usuários Pessoa"])
 )
 @limiter.limit("5/hour")
 def cadastrar_usuario(
-    request: Request, dados: UsuarioPessoaCreate, db: SessaoDb
+    request: Request, dados: UsuarioPessoaCreate, _ip: IpLiberado, db: SessaoDb
 ) -> UsuarioPessoaOut:
     return UsuarioService(db).cadastrar(dados)
 

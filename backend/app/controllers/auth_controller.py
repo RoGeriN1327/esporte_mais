@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Request
 
-from app.core.deps import SessaoDb, UsuarioLogado
+from app.core.deps import IpLiberado, SessaoDb, UsuarioLogado
 from app.core.rate_limit import limiter
 from app.schemas.auth import (
     LoginRequest,
@@ -22,11 +22,13 @@ router = APIRouter(prefix="/auth", tags=["Autenticação"])
     response_model=TokenResponse,
     summary="Autenticar usuário (login)",
     description="Autentica Usuário Pessoa ou Administrativo com e-mail e senha. "
-    "Retorna access token JWT (30 min) e refresh token (7 dias).",
+    "Retorna access token JWT (30 min) e refresh token (sessão de 2 horas). "
+    "3 senhas erradas seguidas bloqueiam a conta por 1 hora; um IP com login recusado "
+    "em 5 contas diferentes em 24 horas é bloqueado até o Gestor liberar.",
 )
-@limiter.limit("10/minute")
-def login(request: Request, dados: LoginRequest, db: SessaoDb) -> TokenResponse:
-    return TokenResponse(**AuthService(db).login(dados.email, dados.senha))
+@limiter.limit("5/minute")
+def login(request: Request, dados: LoginRequest, ip: IpLiberado, db: SessaoDb) -> TokenResponse:
+    return TokenResponse(**AuthService(db).login(dados.email, dados.senha, ip))
 
 
 @router.post(
@@ -60,7 +62,7 @@ def logout(dados: LogoutRequest, usuario: UsuarioLogado, db: SessaoDb) -> Mensag
 )
 @limiter.limit("5/minute")
 def recuperar_senha(
-    request: Request, dados: RecuperarSenhaRequest, db: SessaoDb
+    request: Request, dados: RecuperarSenhaRequest, _ip: IpLiberado, db: SessaoDb
 ) -> MensagemResponse:
     return MensagemResponse(mensagem=AuthService(db).recuperar_senha(dados.email, dados.cpf))
 
@@ -74,7 +76,7 @@ def recuperar_senha(
 )
 @limiter.limit("10/minute")
 def validar_link_redefinicao(
-    request: Request, dados: ValidarTokenRedefinicaoRequest, db: SessaoDb
+    request: Request, dados: ValidarTokenRedefinicaoRequest, _ip: IpLiberado, db: SessaoDb
 ) -> MensagemResponse:
     AuthService(db).validar_token_redefinicao(dados.token)
     return MensagemResponse(mensagem="Link válido.")
@@ -90,7 +92,7 @@ def validar_link_redefinicao(
 )
 @limiter.limit("5/minute")
 def redefinir_senha(
-    request: Request, dados: RedefinirSenhaRequest, db: SessaoDb
+    request: Request, dados: RedefinirSenhaRequest, _ip: IpLiberado, db: SessaoDb
 ) -> MensagemResponse:
     AuthService(db).redefinir_senha(dados.token, dados.nova_senha)
     return MensagemResponse(mensagem="Senha redefinida com sucesso. Faça login com a nova senha.")

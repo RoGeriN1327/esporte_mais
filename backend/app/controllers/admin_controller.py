@@ -5,6 +5,7 @@ from app.schemas.admin import (
     AdministradorCreate,
     AdministradorOut,
     AdministradorUpdate,
+    IpBloqueadoOut,
     UsuarioPessoaAdminCreate,
 )
 from app.schemas.auth import MensagemResponse
@@ -111,3 +112,25 @@ def desativar_usuario_pessoa(
 )
 def reativar_usuario_pessoa(usuario_id: int, _admin: AdminLogado, db: SessaoDb) -> UsuarioPessoaOut:
     return AdminService(db).reativar_usuario_pessoa(usuario_id)
+
+
+@router.get(
+    "/ips-bloqueados",
+    response_model=list[IpBloqueadoOut],
+    summary="Listar IPs bloqueados",
+    description="IPs bloqueados sem prazo por tentarem login em várias contas diferentes. "
+    "Exclusivo do Gestor.",
+)
+def listar_ips_bloqueados(_gestor: GestorLogado, db: SessaoDb) -> list[IpBloqueadoOut]:
+    return AdminService(db).listar_ips_bloqueados()
+
+
+@router.delete(
+    "/ips-bloqueados/{ip}",
+    response_model=MensagemResponse,
+    summary="Desbloquear IP",
+    description="Remove o bloqueio e o histórico de falhas de login do IP. Exclusivo do Gestor.",
+)
+def desbloquear_ip(ip: str, _gestor: GestorLogado, db: SessaoDb) -> MensagemResponse:
+    AdminService(db).desbloquear_ip(ip)
+    return MensagemResponse(mensagem="IP desbloqueado com sucesso.")
