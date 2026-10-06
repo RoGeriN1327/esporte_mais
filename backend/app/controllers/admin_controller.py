@@ -42,12 +42,13 @@ def cadastrar_administrador(
     "/administradores/{admin_id}",
     response_model=AdministradorOut,
     summary="Editar administrador",
-    description="Edita nome, CPF, e-mail e perfil de um administrador. Exclusivo do Gestor.",
+    description="Edita nome, CPF, e-mail e perfil de um administrador. Exclusivo do Gestor. "
+    "O Gestor não pode remover o próprio perfil de Gestor.",
 )
 def editar_administrador(
-    admin_id: int, dados: AdministradorUpdate, _gestor: GestorLogado, db: SessaoDb
+    admin_id: int, dados: AdministradorUpdate, gestor: GestorLogado, db: SessaoDb
 ) -> AdministradorOut:
-    return AdminService(db).editar_administrador(admin_id, dados)
+    return AdminService(db).editar_administrador(admin_id, dados, gestor)
 
 
 @router.post(

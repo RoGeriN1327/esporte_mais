@@ -66,6 +66,16 @@ app.add_middleware(
 )
 
 
+@app.middleware("http")
+async def cabecalhos_de_seguranca(request: Request, call_next):
+    """Cabeçalhos de segurança em todas as respostas da API."""
+    resposta = await call_next(request)
+    resposta.headers.setdefault("X-Content-Type-Options", "nosniff")
+    resposta.headers.setdefault("X-Frame-Options", "DENY")
+    resposta.headers.setdefault("Referrer-Policy", "no-referrer")
+    return resposta
+
+
 @app.exception_handler(ErroDeDominio)
 async def tratar_erro_de_dominio(request: Request, exc: ErroDeDominio) -> JSONResponse:
     headers = {"WWW-Authenticate": "Bearer"} if exc.status_code == 401 else None

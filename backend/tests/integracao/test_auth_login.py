@@ -175,3 +175,21 @@ def test_mais_de_10_logins_por_minuto_do_mesmo_ip_retorna_429(client, db):
     respostas = [_login(client, pessoa.email).status_code for _ in range(11)]
     assert respostas[:10] == [200] * 10
     assert respostas[10] == 429
+
+
+def test_rate_limit_usa_o_ip_informado_pela_cloudflare(client, db):
+    # Em produção o X-Forwarded-For pode ser forjado pelo cliente (o proxy do Render
+    # só acrescenta a ele); o CF-Connecting-IP é sempre reescrito pela Cloudflare.
+    limiter.enabled = True
+    limiter.reset()
+
+    def tentar(ip):
+        return client.post(
+            "/auth/login",
+            json={"email": "ninguem@teste.com", "senha": "errada"},
+            headers={"CF-Connecting-IP": ip},
+        ).status_code
+
+    assert [tentar("200.1.1.1") for _ in range(11)][10] == 429
+    # Outro cliente real (outro IP da Cloudflare) não é afetado pelo bloqueio do primeiro.
+    assert tentar("200.2.2.2") == 401

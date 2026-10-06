@@ -26,7 +26,7 @@ EXPOSE 8000
 
 ENTRYPOINT ["./docker-entrypoint.sh"]
 # - PORT: plataformas como Render/Railway definem a porta por variável; local usa 8000.
-# - --proxy-headers: atrás do proxy HTTPS da hospedagem, usa o IP real do cliente
-#   (X-Forwarded-For). Sem isso o rate limit do login trataria todos os usuários
-#   como um só IP.
+# - --proxy-headers: atrás do proxy HTTPS da hospedagem, usa o esquema (https) e o
+#   IP do X-Forwarded-For nos logs. O rate limit NÃO usa esse IP (o cliente pode
+#   forjá-lo); usa o CF-Connecting-IP (ver app/core/rate_limit.py).
 CMD ["sh", "-c", "exec uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --proxy-headers --forwarded-allow-ips='*'"]

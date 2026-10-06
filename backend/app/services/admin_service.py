@@ -7,7 +7,13 @@ from sqlalchemy.orm import Session
 from app.core import security
 from app.core.deps import UsuarioAtual
 from app.exceptions import RecursoNaoEncontrado, RegraDeNegocioViolada
-from app.models import StatusUsuario, TipoUsuario, UsuarioAdministrativo, UsuarioPessoa
+from app.models import (
+    PerfilAdministrativo,
+    StatusUsuario,
+    TipoUsuario,
+    UsuarioAdministrativo,
+    UsuarioPessoa,
+)
 from app.repositories import (
     TokenRepository,
     UsuarioAdministrativoRepository,
@@ -21,6 +27,7 @@ from app.services.usuario_service import UsuarioService
 MSG_ADMIN_NAO_ENCONTRADO = "Administrador não encontrado."
 MSG_USUARIO_NAO_ENCONTRADO = "Usuário não encontrado."
 MSG_AUTO_DESATIVACAO = "Auto desativação administrativa não é permitida."
+MSG_AUTO_REBAIXAMENTO = "Você não pode remover o seu próprio perfil de Gestor."
 
 
 class AdminService:
@@ -57,11 +64,15 @@ class AdminService:
         return admin
 
     def editar_administrador(
-        self, admin_id: int, dados: AdministradorUpdate
+        self, admin_id: int, dados: AdministradorUpdate, gestor_atual: UsuarioAtual
     ) -> UsuarioAdministrativo:
         admin = self.admins.obter_por_id(admin_id)
         if admin is None:
             raise RecursoNaoEncontrado(MSG_ADMIN_NAO_ENCONTRADO)
+        # Como só um Gestor ativo edita ou desativa administradores e ele não pode se
+        # desativar nem se rebaixar, o sistema nunca fica sem nenhum Gestor.
+        if admin_id == gestor_atual.id and dados.perfil is not PerfilAdministrativo.GESTOR:
+            raise RegraDeNegocioViolada(MSG_AUTO_REBAIXAMENTO)
         self._usuarios.validar_unicidade_global(
             cpf=dados.cpf,
             email=dados.email,
