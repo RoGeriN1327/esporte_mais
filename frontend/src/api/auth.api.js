@@ -15,6 +15,11 @@ export async function recuperarSenha(email, cpf) {
   return data
 }
 
+export async function validarLinkRedefinicao(token) {
+  const { data } = await api.post('/auth/redefinir-senha/validar', { token })
+  return data
+}
+
 export async function redefinirSenha(token, novaSenha, confirmarSenha) {
   const { data } = await api.post('/auth/redefinir-senha', {
     token,

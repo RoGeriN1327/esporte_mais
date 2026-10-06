@@ -4,7 +4,8 @@ Regras verificadas:
   * o link só é enviado quando e-mail E CPF pertencem ao mesmo usuário ativo;
   * a resposta é sempre a mesma (anti-enumeração de contas);
   * o link vale por 1 hora e é de uso único;
-  * redefinir a senha desbloqueia a conta e encerra as sessões abertas.
+  * redefinir a senha desbloqueia a conta e encerra as sessões abertas;
+  * o link pode ser validado ao abrir a página, sem ser consumido.
 """
 
 import re
@@ -43,6 +44,10 @@ def _redefinir(client, token, senha=NOVA_SENHA, confirmar=None):
         "/auth/redefinir-senha",
         json={"token": token, "nova_senha": senha, "confirmar_senha": confirmar or senha},
     )
+
+
+def _validar(client, token):
+    return client.post("/auth/redefinir-senha/validar", json={"token": token})
 
 
 def _total_tokens(db) -> int:
@@ -173,3 +178,31 @@ class TestRedefinicao:
         assert _redefinir(client, token, "curta").status_code == 422
         assert _redefinir(client, token, NOVA_SENHA, "Diferente@1").status_code == 422
         assert _redefinir(client, token).status_code == 200
+
+
+class TestValidacaoDoLink:
+    def test_link_valido_e_aceito_sem_ser_consumido(self, client, db, caixa_de_email):
+        pessoa = criar_pessoa(db)
+        _solicitar(client, pessoa.email, pessoa.cpf)
+        token = _token_do_email(caixa_de_email, pessoa.email)
+
+        for _ in range(2):
+            resposta = _validar(client, token)
+            assert resposta.status_code == 200
+            assert resposta.json() == {"mensagem": "Link válido."}
+        assert _redefinir(client, token).status_code == 200
+
+    def test_link_expirado_usado_ou_inventado_e_recusado(self, client, db, caixa_de_email, relogio):
+        usado = criar_pessoa(db)
+        expirado = criar_pessoa(db)
+        for pessoa in (usado, expirado):
+            _solicitar(client, pessoa.email, pessoa.cpf)
+        token_usado = _token_do_email(caixa_de_email, usado.email)
+        assert _redefinir(client, token_usado).status_code == 200
+
+        relogio.shift(timedelta(hours=1))
+        token_expirado = _token_do_email(caixa_de_email, expirado.email)
+        for invalido in (token_usado, token_expirado, "token-inventado"):
+            resposta = _validar(client, invalido)
+            assert resposta.status_code == 400
+            assert resposta.json() == {"detail": "Link inválido ou expirado."}

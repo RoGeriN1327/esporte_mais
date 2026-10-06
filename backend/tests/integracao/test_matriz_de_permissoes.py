@@ -67,6 +67,7 @@ ROTAS_PUBLICAS = [
     ("POST", "/auth/login"),
     ("POST", "/auth/refresh"),
     ("POST", "/auth/recuperar-senha"),
+    ("POST", "/auth/redefinir-senha/validar"),
     ("POST", "/auth/redefinir-senha"),
 ]
 

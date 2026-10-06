@@ -10,6 +10,7 @@ from app.schemas.auth import (
     RedefinirSenhaRequest,
     RefreshRequest,
     TokenResponse,
+    ValidarTokenRedefinicaoRequest,
 )
 from app.services.auth_service import AuthService
 
@@ -62,6 +63,21 @@ def recuperar_senha(
     request: Request, dados: RecuperarSenhaRequest, db: SessaoDb
 ) -> MensagemResponse:
     return MensagemResponse(mensagem=AuthService(db).recuperar_senha(dados.email, dados.cpf))
+
+
+@router.post(
+    "/redefinir-senha/validar",
+    response_model=MensagemResponse,
+    summary="Validar link de redefinição de senha",
+    description="Confere se o token do link ainda é válido (existe, não foi usado e não "
+    "expirou), sem consumi-lo. Usado ao abrir a página de redefinição.",
+)
+@limiter.limit("10/minute")
+def validar_link_redefinicao(
+    request: Request, dados: ValidarTokenRedefinicaoRequest, db: SessaoDb
+) -> MensagemResponse:
+    AuthService(db).validar_token_redefinicao(dados.token)
+    return MensagemResponse(mensagem="Link válido.")
 
 
 @router.post(
