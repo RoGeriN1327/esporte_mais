@@ -37,3 +37,12 @@ def test_documentacao_desligada_responde_404_e_a_api_continua_no_ar(app_com_docs
     for rota in ROTAS_DE_DOCUMENTACAO:
         assert cliente.get(rota).status_code == 404, rota
     assert cliente.get("/health").status_code == 200
+
+
+def test_health_responde_a_get_e_a_head_para_monitores_de_disponibilidade(app_com_docs):
+    cliente = TestClient(app_com_docs(False))
+    resposta = cliente.get("/health")
+    assert (resposta.status_code, resposta.json()) == (200, {"status": "ok"})
+    # UptimeRobot e similares pingam com HEAD: mesma resposta, sem corpo.
+    resposta = cliente.head("/health")
+    assert (resposta.status_code, resposta.content) == (200, b"")
