@@ -3,18 +3,19 @@
 Regras verificadas:
   * rotas protegidas exigem access token válido (401 caso contrário);
   * access token expira em 30 minutos;
-  * refresh token (7 dias) gera novo par e é invalidado após o uso (rotação);
+  * refresh token gera novo par e é invalidado após o uso (rotação);
+  * a sessão dura no máximo 2 horas após o login: renovar os tokens não a estende;
   * logout invalida imediatamente o access token e o refresh token da sessão;
   * usuário desativado perde o acesso mesmo com token ainda válido.
 """
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import jwt
 import pytest
 
 from app.models import StatusUsuario
-from tests.fabricas import autenticar, criar_pessoa, login_completo
+from tests.fabricas import AGORA, autenticar, criar_pessoa, login_completo
 
 pytestmark = pytest.mark.integracao
 
@@ -89,16 +90,6 @@ class TestRefreshToken:
         assert reuso.json() == {"detail": "Sessão inválida ou expirada. Faça login novamente."}
         assert _renovar(client, "nao-existe").status_code == 401
 
-    def test_refresh_token_vale_por_exatamente_7_dias(self, client, db, relogio):
-        pessoa = criar_pessoa(db)
-        primeiro = login_completo(client, pessoa.email)["refresh_token"]
-        segundo = login_completo(client, pessoa.email)["refresh_token"]
-
-        relogio.shift(timedelta(days=7) - timedelta(seconds=1))
-        assert _renovar(client, primeiro).status_code == 200
-        relogio.shift(timedelta(seconds=1))
-        assert _renovar(client, segundo).status_code == 401
-
     def test_refresh_de_usuario_desativado_retorna_403(self, client, db):
         pessoa = criar_pessoa(db)
         refresh = login_completo(client, pessoa.email)["refresh_token"]
@@ -151,3 +142,43 @@ class TestLogout:
             headers=_bearer(sessao_atacante["access_token"]),
         )
         assert _renovar(client, sessao_vitima["refresh_token"]).status_code == 200
+
+
+class TestDuracaoDaSessao:
+    def test_login_informa_o_fim_da_sessao_2_horas_depois(self, client, db):
+        pessoa = criar_pessoa(db)
+        sessao = login_completo(client, pessoa.email)
+        fim = datetime.fromisoformat(sessao["sessao_expira_em"])
+        assert fim == AGORA + timedelta(hours=2)
+
+    def test_refresh_funciona_ate_2_horas_apos_o_login(self, client, db, relogio):
+        pessoa = criar_pessoa(db)
+        primeiro = login_completo(client, pessoa.email)["refresh_token"]
+        segundo = login_completo(client, pessoa.email)["refresh_token"]
+
+        relogio.shift(timedelta(hours=2) - timedelta(seconds=1))
+        assert _renovar(client, primeiro).status_code == 200
+        relogio.shift(timedelta(seconds=1))
+        resposta = _renovar(client, segundo)
+        assert resposta.status_code == 401
+        assert resposta.json() == {"detail": "Sessão inválida ou expirada. Faça login novamente."}
+
+    def test_renovar_os_tokens_nao_estende_a_sessao(self, client, db, relogio):
+        pessoa = criar_pessoa(db)
+        sessao = login_completo(client, pessoa.email)
+
+        # Usuário ativo renovando a cada 25 minutos: a sessão ainda acaba em 2 horas.
+        refresh = sessao["refresh_token"]
+        for _ in range(4):
+            relogio.shift(timedelta(minutes=25))
+            renovado = _renovar(client, refresh).json()
+            assert renovado["sessao_expira_em"] == sessao["sessao_expira_em"]
+            refresh = renovado["refresh_token"]
+
+        # Aos 1h40, o access token novo vale só os 20 minutos que restam (não 30).
+        cabecalho = _bearer(renovado["access_token"])
+        relogio.shift(timedelta(minutes=20) - timedelta(seconds=1))
+        assert client.get(ROTA_PROTEGIDA, headers=cabecalho).status_code == 200
+        relogio.shift(timedelta(seconds=2))
+        assert client.get(ROTA_PROTEGIDA, headers=cabecalho).status_code == 401
+        assert _renovar(client, refresh).status_code == 401

@@ -22,7 +22,7 @@ os.environ.update(
         "JWT_SECRET": "segredo-exclusivo-dos-testes-com-mais-de-32-bytes",
         "JWT_ALGORITHM": "HS256",
         "ACCESS_TOKEN_EXPIRE_MINUTES": "30",
-        "REFRESH_TOKEN_EXPIRE_DAYS": "7",
+        "SESSAO_EXPIRE_MINUTES": "120",
         "RESET_TOKEN_EXPIRE_MINUTES": "60",
         "LOGIN_MAX_TENTATIVAS": "5",
         "LOGIN_BLOQUEIO_MINUTOS": "15",

@@ -26,6 +26,16 @@ function destinoDe(usuario) {
   return usuario?.tipo === 'Administrativo' ? '/admin' : '/'
 }
 
+const AVISO_SESSAO_EXPIRADA = 'Sua sessão expirou. Faça login novamente.'
+
+// Sem usuário logado: volta ao login, com aviso se a sessão terminou sozinha.
+function IrParaLogin() {
+  const { sessaoExpirada } = useAuth()
+  return (
+    <Navigate to="/login" replace state={sessaoExpirada ? { aviso: AVISO_SESSAO_EXPIRADA } : undefined} />
+  )
+}
+
 function RotaPublica() {
   const { usuario, carregando } = useAuth()
   if (carregando) return <Carregando />
@@ -36,7 +46,7 @@ function RotaPublica() {
 function RotaPessoa() {
   const { usuario, carregando, ehPessoa } = useAuth()
   if (carregando) return <Carregando />
-  if (!usuario) return <Navigate to="/login" replace />
+  if (!usuario) return <IrParaLogin />
   if (!ehPessoa) return <Navigate to="/admin" replace />
   return <Outlet />
 }
@@ -44,7 +54,7 @@ function RotaPessoa() {
 function RotaAdmin() {
   const { usuario, carregando, ehAdmin } = useAuth()
   if (carregando) return <Carregando />
-  if (!usuario) return <Navigate to="/login" replace />
+  if (!usuario) return <IrParaLogin />
   if (!ehAdmin) return <Navigate to="/" replace />
   return <Outlet />
 }

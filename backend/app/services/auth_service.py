@@ -65,21 +65,28 @@ class AuthService:
         return self.pessoas if tipo is TipoUsuario.PESSOA else self.admins
 
     def _emitir_tokens(
-        self, usuario: UsuarioPessoa | UsuarioAdministrativo, tipo: TipoUsuario
+        self,
+        usuario: UsuarioPessoa | UsuarioAdministrativo,
+        tipo: TipoUsuario,
+        sessao_expira_em: datetime,
     ) -> dict:
         perfil = usuario.perfil if tipo is TipoUsuario.ADMINISTRATIVO else None
-        access_token, _jti, _exp = security.criar_access_token(usuario.id, tipo, perfil)
+        access_token, _jti, _exp = security.criar_access_token(
+            usuario.id, tipo, perfil, sessao_expira_em=sessao_expira_em
+        )
         refresh_token = security.gerar_token_opaco()
+        # O refresh token vence junto com a sessão; a rotação repassa o mesmo prazo.
         self.tokens.criar_refresh(
             token_hash=security.hash_token(refresh_token),
             tipo_usuario=tipo,
             usuario_id=usuario.id,
-            expira_em=datetime.now(UTC) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+            expira_em=sessao_expira_em,
         )
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
+            "sessao_expira_em": sessao_expira_em,
             "usuario": {
                 "id": usuario.id,
                 "nome": usuario.nome,
@@ -122,7 +129,8 @@ class AuthService:
         if usuario.tentativas_login:
             repositorio.atualizar(usuario, tentativas_login=0)
 
-        resultado = self._emitir_tokens(usuario, tipo)
+        sessao_expira_em = agora + timedelta(minutes=settings.SESSAO_EXPIRE_MINUTES)
+        resultado = self._emitir_tokens(usuario, tipo, sessao_expira_em)
         self.db.commit()
         return resultado
 
@@ -138,7 +146,7 @@ class AuthService:
             raise ContaDesativada(MSG_CONTA_DESATIVADA)
 
         self.tokens.revogar_refresh(registro)
-        resultado = self._emitir_tokens(usuario, registro.tipo_usuario)
+        resultado = self._emitir_tokens(usuario, registro.tipo_usuario, registro.expira_em)
         self.db.commit()
         return resultado
 
