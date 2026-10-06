@@ -15,7 +15,13 @@ from app.exceptions import (
     CredenciaisInvalidas,
     RegraDeNegocioViolada,
 )
-from app.models import StatusUsuario, TipoUsuario, UsuarioAdministrativo, UsuarioPessoa
+from app.models import (
+    StatusUsuario,
+    TipoUsuario,
+    TokenRedefinicaoSenha,
+    UsuarioAdministrativo,
+    UsuarioPessoa,
+)
 from app.repositories import (
     TokenRepository,
     UsuarioAdministrativoRepository,
@@ -165,11 +171,19 @@ class AuthService:
             self.emails.enviar_link_recuperacao(nome=usuario.nome, email=usuario.email, link=link)
         return MSG_RECUPERACAO_GENERICA
 
-    def redefinir_senha(self, token: str, nova_senha: str) -> None:
+    def _token_redefinicao_valido(self, token: str) -> TokenRedefinicaoSenha:
         registro = self.tokens.obter_token_redefinicao_por_hash(security.hash_token(token))
         agora = datetime.now(UTC)
         if registro is None or registro.usado_em is not None or registro.expira_em <= agora:
             raise RegraDeNegocioViolada(MSG_LINK_INVALIDO)
+        return registro
+
+    def validar_token_redefinicao(self, token: str) -> None:
+        """Só confere o link (sem consumi-lo), para o front avisar antes do usuário digitar."""
+        self._token_redefinicao_valido(token)
+
+    def redefinir_senha(self, token: str, nova_senha: str) -> None:
+        registro = self._token_redefinicao_valido(token)
 
         repositorio = self._repositorio_de(registro.tipo_usuario)
         usuario = repositorio.obter_por_id(registro.usuario_id)

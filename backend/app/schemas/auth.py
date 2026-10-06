@@ -44,6 +44,10 @@ class RecuperarSenhaRequest(BaseModel):
     cpf: CPF = Field(description="CPF do titular da conta (com ou sem máscara)")
 
 
+class ValidarTokenRedefinicaoRequest(BaseModel):
+    token: str = Field(description="Token recebido no link enviado por e-mail")
+
+
 class RedefinirSenhaRequest(BaseModel):
     token: str = Field(description="Token recebido no link enviado por e-mail")
     nova_senha: Senha
