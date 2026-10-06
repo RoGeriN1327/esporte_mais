@@ -95,6 +95,9 @@ app.include_router(agendamento_admin_router)
 app.include_router(configuracao_router)
 
 
+# HEAD além de GET: monitores de disponibilidade (ex.: UptimeRobot) pingam com HEAD.
+# Fica fora da documentação para não duplicar a operação do GET.
+@app.head("/health", include_in_schema=False)
 @app.get("/health", tags=["Infraestrutura"], summary="Verificação de saúde da API")
 def health_check() -> dict[str, str]:
     return {"status": "ok"}
