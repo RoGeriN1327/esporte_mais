@@ -84,7 +84,8 @@ def validar_link_redefinicao(
     "/redefinir-senha",
     response_model=MensagemResponse,
     summary="Redefinir senha via link temporário",
-    description="Define nova senha (de 8 a 72 caracteres) a partir do token recebido "
+    description="Define nova senha (de 8 a 72 caracteres, diferente da atual) a partir do "
+    "token recebido "
     "por e-mail. O link é de uso único e expira em 1 hora.",
 )
 @limiter.limit("5/minute")

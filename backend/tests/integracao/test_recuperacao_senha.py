@@ -5,6 +5,7 @@ Regras verificadas:
   * a resposta é sempre a mesma (anti-enumeração de contas);
   * o link vale por 1 hora e é de uso único;
   * redefinir a senha desbloqueia a conta e encerra as sessões abertas;
+  * a nova senha deve ser diferente da senha atual;
   * o link pode ser validado ao abrir a página, sem ser consumido.
 """
 
@@ -17,6 +18,7 @@ from sqlalchemy import func, select
 from app.models import Notificacao, StatusUsuario, TokenRedefinicaoSenha
 from tests.fabricas import (
     AGORA,
+    SENHA_PADRAO,
     criar_admin,
     criar_pessoa,
     eventos,
@@ -177,6 +179,18 @@ class TestRedefinicao:
         token = _token_do_email(caixa_de_email, pessoa.email)
         assert _redefinir(client, token, "curta").status_code == 422
         assert _redefinir(client, token, NOVA_SENHA, "Diferente@1").status_code == 422
+        assert _redefinir(client, token).status_code == 200
+
+    def test_nova_senha_igual_a_atual_e_recusada_e_o_link_continua_valido(
+        self, client, db, caixa_de_email
+    ):
+        pessoa = criar_pessoa(db)
+        _solicitar(client, pessoa.email, pessoa.cpf)
+        token = _token_do_email(caixa_de_email, pessoa.email)
+
+        resposta = _redefinir(client, token, SENHA_PADRAO)
+        assert resposta.status_code == 400
+        assert resposta.json() == {"detail": "A nova senha deve ser diferente da senha atual."}
         assert _redefinir(client, token).status_code == 200
 
 

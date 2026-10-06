@@ -36,6 +36,7 @@ MSG_CONTA_BLOQUEADA = (
 MSG_CONTA_DESATIVADA = "Conta desativada."
 MSG_SESSAO_INVALIDA = "Sessão inválida ou expirada. Faça login novamente."
 MSG_LINK_INVALIDO = "Link inválido ou expirado."
+MSG_SENHA_IGUAL_ATUAL = "A nova senha deve ser diferente da senha atual."
 MSG_RECUPERACAO_GENERICA = "Se o e-mail estiver cadastrado, o link será enviado."
 
 
@@ -188,6 +189,9 @@ class AuthService:
         usuario = repositorio.obter_por_id(registro.usuario_id)
         if usuario is None:
             raise RegraDeNegocioViolada(MSG_LINK_INVALIDO)
+        # Recusa antes de consumir o token: o usuário pode tentar de novo pelo mesmo link.
+        if security.verificar_senha(nova_senha, usuario.senha):
+            raise RegraDeNegocioViolada(MSG_SENHA_IGUAL_ATUAL)
 
         repositorio.atualizar(
             usuario,
