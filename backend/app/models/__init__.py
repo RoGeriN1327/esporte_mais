@@ -14,6 +14,7 @@ from app.models.enums import (
 )
 from app.models.notificacao import Notificacao
 from app.models.quadra import Quadra, QuadraFaixaHoraria
+from app.models.seguranca import FalhaLogin, IpBloqueado
 from app.models.usuario_administrativo import UsuarioAdministrativo
 from app.models.usuario_pessoa import UsuarioPessoa
 
@@ -22,6 +23,8 @@ __all__ = [
     "CHAVE_ANTECEDENCIA_CANCELAMENTO",
     "CHAVE_ANTECEDENCIA_LEMBRETE",
     "Configuracao",
+    "FalhaLogin",
+    "IpBloqueado",
     "Notificacao",
     "PerfilAdministrativo",
     "Quadra",

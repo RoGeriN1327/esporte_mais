@@ -1,14 +1,15 @@
-// Configurações do sistema (só Gestor): prazo mínimo de cancelamento pelo cidadão (RN004)
-// e antecedência do lembrete automático por e-mail (RF005).
+// Configurações do sistema (só Gestor): prazo mínimo de cancelamento pelo cidadão (RN004),
+// antecedência do lembrete automático por e-mail (RF005) e IPs bloqueados por força bruta.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { TbBellRinging, TbHourglass } from 'react-icons/tb'
+import { TbBellRinging, TbHourglass, TbShieldLock } from 'react-icons/tb'
 
 import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
 import { BarraAcoes, CabecalhoPagina, Cartao } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
 import { Alerta, Botao, Carregando } from '../../components/ui'
+import { formatarDataHora } from '../../utils/datas'
 
 export default function ConfiguracoesPage() {
   const { data: configuracoes, isLoading, error } = useQuery({
@@ -32,6 +33,7 @@ export default function ConfiguracoesPage() {
         // O formulário só é montado com os dados carregados, já com os valores iniciais.
         <FormularioConfiguracoes configuracoes={configuracoes} />
       )}
+      <IpsBloqueados />
     </div>
   )
 }
@@ -139,5 +141,80 @@ function FormularioConfiguracoes({ configuracoes }) {
         </Botao>
       </BarraAcoes>
     </form>
+  )
+}
+
+// IPs que tentaram login em várias contas diferentes ficam bloqueados sem prazo nas
+// rotas públicas (login, cadastro, recuperação de senha) até o Gestor liberar.
+function IpsBloqueados() {
+  const queryClient = useQueryClient()
+  const [mensagem, setMensagem] = useState('')
+  const [erro, setErro] = useState('')
+  const { data: ips, isLoading, error } = useQuery({
+    queryKey: ['ips-bloqueados'],
+    queryFn: adminApi.listarIpsBloqueados,
+  })
+
+  const desbloquear = useMutation({
+    mutationFn: adminApi.desbloquearIp,
+    onSuccess: (_dados, ip) => {
+      setErro('')
+      setMensagem(`IP ${ip} desbloqueado.`)
+      queryClient.invalidateQueries({ queryKey: ['ips-bloqueados'] })
+    },
+    onError: (excecao) => {
+      setMensagem('')
+      setErro(mensagemDeErro(excecao))
+    },
+  })
+
+  return (
+    <section className="mt-10 space-y-4" aria-labelledby="titulo-ips-bloqueados">
+      <div className="flex gap-3.5">
+        <span className="grid size-10 shrink-0 place-items-center rounded-lg bg-marca-50 text-marca-700">
+          <TbShieldLock aria-hidden="true" className="size-5" />
+        </span>
+        <div>
+          <h2 id="titulo-ips-bloqueados" className="font-extrabold text-cinza-900">
+            IPs bloqueados
+          </h2>
+          <p className="mt-1 text-sm text-cinza-600">
+            Endereços que erraram o login em 5 contas diferentes em 24 horas. Ficam sem acesso ao
+            login, cadastro e recuperação de senha até serem desbloqueados.
+          </p>
+        </div>
+      </div>
+      <Cartao>
+        {isLoading ? (
+          <Carregando />
+        ) : error ? (
+          <Alerta tipo="erro">{mensagemDeErro(error)}</Alerta>
+        ) : ips.length === 0 ? (
+          <p className="text-sm text-cinza-600">Nenhum IP bloqueado.</p>
+        ) : (
+          <ul className="divide-y divide-cinza-100">
+            {ips.map((item) => (
+              <li key={item.ip} className="flex flex-col gap-3 py-4 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="font-bold tabular-nums text-cinza-900 break-all">{item.ip}</p>
+                  <p className="text-sm text-cinza-600">
+                    {item.motivo} · desde {formatarDataHora(item.bloqueado_em)}
+                  </p>
+                </div>
+                <Botao
+                  variante="secundario"
+                  carregando={desbloquear.isPending && desbloquear.variables === item.ip}
+                  onClick={() => desbloquear.mutate(item.ip)}
+                >
+                  Desbloquear
+                </Botao>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Cartao>
+      <Alerta tipo="sucesso">{mensagem}</Alerta>
+      <Alerta tipo="erro">{erro}</Alerta>
+    </section>
   )
 }

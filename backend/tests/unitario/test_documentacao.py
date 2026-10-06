@@ -46,3 +46,11 @@ def test_health_responde_a_get_e_a_head_para_monitores_de_disponibilidade(app_co
     # UptimeRobot e similares pingam com HEAD: mesma resposta, sem corpo.
     resposta = cliente.head("/health")
     assert (resposta.status_code, resposta.content) == (200, b"")
+
+
+def test_respostas_da_api_trazem_cabecalhos_de_seguranca(app_com_docs):
+    cliente = TestClient(app_com_docs(False))
+    for resposta in (cliente.get("/health"), cliente.get("/rota-inexistente")):
+        assert resposta.headers["X-Content-Type-Options"] == "nosniff"
+        assert resposta.headers["X-Frame-Options"] == "DENY"
+        assert resposta.headers["Referrer-Policy"] == "no-referrer"

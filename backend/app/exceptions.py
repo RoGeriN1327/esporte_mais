@@ -33,6 +33,10 @@ class AcessoNegado(ErroDeDominio):
     status_code = 403
 
 
+class IpBloqueado(ErroDeDominio):
+    status_code = 403
+
+
 class RecursoNaoEncontrado(ErroDeDominio):
     status_code = 404
 

@@ -7,8 +7,16 @@ from sqlalchemy.orm import Session
 from app.core import security
 from app.core.deps import UsuarioAtual
 from app.exceptions import RecursoNaoEncontrado, RegraDeNegocioViolada
-from app.models import StatusUsuario, TipoUsuario, UsuarioAdministrativo, UsuarioPessoa
+from app.models import (
+    IpBloqueado,
+    PerfilAdministrativo,
+    StatusUsuario,
+    TipoUsuario,
+    UsuarioAdministrativo,
+    UsuarioPessoa,
+)
 from app.repositories import (
+    SegurancaRepository,
     TokenRepository,
     UsuarioAdministrativoRepository,
     UsuarioPessoaRepository,
@@ -21,6 +29,8 @@ from app.services.usuario_service import UsuarioService
 MSG_ADMIN_NAO_ENCONTRADO = "Administrador não encontrado."
 MSG_USUARIO_NAO_ENCONTRADO = "Usuário não encontrado."
 MSG_AUTO_DESATIVACAO = "Auto desativação administrativa não é permitida."
+MSG_AUTO_REBAIXAMENTO = "Você não pode remover o seu próprio perfil de Gestor."
+MSG_IP_NAO_BLOQUEADO = "IP não está bloqueado."
 
 
 class AdminService:
@@ -29,6 +39,7 @@ class AdminService:
         self.pessoas = UsuarioPessoaRepository(db)
         self.admins = UsuarioAdministrativoRepository(db)
         self.tokens = TokenRepository(db)
+        self.seguranca = SegurancaRepository(db)
         self.emails = email_service or EmailService(db)
         self._usuarios = UsuarioService(db, email_service=self.emails)
 
@@ -57,11 +68,15 @@ class AdminService:
         return admin
 
     def editar_administrador(
-        self, admin_id: int, dados: AdministradorUpdate
+        self, admin_id: int, dados: AdministradorUpdate, gestor_atual: UsuarioAtual
     ) -> UsuarioAdministrativo:
         admin = self.admins.obter_por_id(admin_id)
         if admin is None:
             raise RecursoNaoEncontrado(MSG_ADMIN_NAO_ENCONTRADO)
+        # Como só um Gestor ativo edita ou desativa administradores e ele não pode se
+        # desativar nem se rebaixar, o sistema nunca fica sem nenhum Gestor.
+        if admin_id == gestor_atual.id and dados.perfil is not PerfilAdministrativo.GESTOR:
+            raise RegraDeNegocioViolada(MSG_AUTO_REBAIXAMENTO)
         self._usuarios.validar_unicidade_global(
             cpf=dados.cpf,
             email=dados.email,
@@ -125,3 +140,13 @@ class AdminService:
         )
         self.db.commit()
         return usuario
+
+    # --- IPs bloqueados (força bruta no login) ------------------------------
+
+    def listar_ips_bloqueados(self) -> list[IpBloqueado]:
+        return self.seguranca.listar_ips_bloqueados()
+
+    def desbloquear_ip(self, ip: str) -> None:
+        if not self.seguranca.desbloquear_ip(ip):
+            raise RecursoNaoEncontrado(MSG_IP_NAO_BLOQUEADO)
+        self.db.commit()

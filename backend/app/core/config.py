@@ -34,8 +34,12 @@ class Settings(BaseSettings):
     RESET_TOKEN_EXPIRE_MINUTES: int = 60
 
     # Bloqueio temporário da conta após N senhas erradas seguidas
-    LOGIN_MAX_TENTATIVAS: int = 5
-    LOGIN_BLOQUEIO_MINUTOS: int = 15
+    LOGIN_MAX_TENTATIVAS: int = 3
+    LOGIN_BLOQUEIO_MINUTOS: int = 60
+    # Um IP com login recusado em N contas diferentes dentro da janela é bloqueado
+    # sem prazo nas rotas públicas de autenticação (só o Gestor desbloqueia).
+    IP_MAX_CONTAS_COM_FALHA: int = 5
+    IP_JANELA_FALHAS_HORAS: int = 24
 
     # "console" apenas imprime o e-mail no log; "smtp" envia de verdade
     MAIL_MODE: Literal["console", "smtp"] = "console"

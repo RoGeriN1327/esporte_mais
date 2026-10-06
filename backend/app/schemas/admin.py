@@ -36,3 +36,11 @@ class AdministradorOut(BaseModel):
 
 class UsuarioPessoaAdminCreate(_DadosCadastraisBase):
     """Cadastro de cidadão feito pela administração (senha gerada e enviada por e-mail)."""
+
+
+class IpBloqueadoOut(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    ip: str
+    motivo: str
+    bloqueado_em: datetime

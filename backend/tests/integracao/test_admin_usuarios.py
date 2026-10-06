@@ -180,6 +180,25 @@ class TestAdministradores:
         )
         assert client.get("/admin/administradores", headers=auth_outro).status_code == 403
 
+    def test_gestor_nao_rebaixa_a_si_mesmo_mas_edita_os_proprios_dados(
+        self, client, db, gestor, auth_gestor
+    ):
+        # Impede que o sistema fique sem nenhum Gestor.
+        url = f"/admin/administradores/{gestor.id}"
+        dados = _novo_admin(cpf=gestor.cpf, email=gestor.email, perfil="Operador")
+        resposta = client.put(url, json=dados, headers=auth_gestor)
+        assert resposta.status_code == 400
+        assert resposta.json()["detail"] == "Você não pode remover o seu próprio perfil de Gestor."
+        db.refresh(gestor)
+        assert gestor.perfil is GESTOR
+
+        dados = _novo_admin(
+            nome="Gestor Renomeado", cpf=gestor.cpf, email=gestor.email, perfil="Gestor"
+        )
+        assert client.put(url, json=dados, headers=auth_gestor).status_code == 200
+        db.refresh(gestor)
+        assert (gestor.nome, gestor.perfil) == ("Gestor Renomeado", GESTOR)
+
     def test_gestor_desativa_operador_e_encerra_suas_sessoes(self, client, db, auth_gestor):
         operador = criar_admin(db, perfil=OPERADOR)
         sessao = login_completo(client, operador.email)

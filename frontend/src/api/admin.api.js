@@ -97,3 +97,13 @@ export async function atualizarConfiguracoes(payload) {
   const { data } = await api.put('/admin/configuracoes', payload)
   return data
 }
+
+export async function listarIpsBloqueados() {
+  const { data } = await api.get('/admin/ips-bloqueados')
+  return data
+}
+
+export async function desbloquearIp(ip) {
+  const { data } = await api.delete(`/admin/ips-bloqueados/${encodeURIComponent(ip)}`)
+  return data
+}

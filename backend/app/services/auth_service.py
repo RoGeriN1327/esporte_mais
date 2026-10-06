@@ -23,6 +23,7 @@ from app.models import (
     UsuarioPessoa,
 )
 from app.repositories import (
+    SegurancaRepository,
     TokenRepository,
     UsuarioAdministrativoRepository,
     UsuarioPessoaRepository,
@@ -46,6 +47,7 @@ class AuthService:
         self.pessoas = UsuarioPessoaRepository(db)
         self.admins = UsuarioAdministrativoRepository(db)
         self.tokens = TokenRepository(db)
+        self.seguranca = SegurancaRepository(db)
         self.emails = email_service or EmailService(db)
 
     def _localizar_por_email(
@@ -96,11 +98,30 @@ class AuthService:
             },
         }
 
-    def login(self, email: str, senha: str) -> dict:
+    def _registrar_falha_do_ip(self, ip: str, email: str) -> None:
+        """Guarda a falha e bloqueia sem prazo o IP que errou em contas demais.
+
+        Quem tenta entrar em várias contas diferentes a partir do mesmo IP está
+        testando senhas em massa; um usuário legítimo erra a própria conta.
+        """
+        self.seguranca.registrar_falha_login(ip, email)
+        desde = datetime.now(UTC) - timedelta(hours=settings.IP_JANELA_FALHAS_HORAS)
+        contas = self.seguranca.contar_contas_com_falha(ip, desde)
+        if contas >= settings.IP_MAX_CONTAS_COM_FALHA:
+            self.seguranca.bloquear_ip(
+                ip,
+                f"Login recusado em {contas} contas diferentes em "
+                f"{settings.IP_JANELA_FALHAS_HORAS}h",
+            )
+
+    def login(self, email: str, senha: str, ip: str) -> dict:
+        """O bloqueio do IP é checado antes, na rota (ver app.core.deps.IpLiberado)."""
         usuario, tipo = self._localizar_por_email(email)
         if usuario is None:
             # Gasta o mesmo tempo de um login real (ver security.HASH_FICTICIO).
             security.verificar_senha(senha, security.HASH_FICTICIO)
+            self._registrar_falha_do_ip(ip, email)
+            self.db.commit()
             raise CredenciaisInvalidas(MSG_CREDENCIAIS_INVALIDAS)
 
         agora = datetime.now(UTC)
@@ -108,6 +129,8 @@ class AuthService:
 
         if usuario.bloqueado_ate is not None:
             if usuario.bloqueado_ate > agora:
+                self._registrar_falha_do_ip(ip, email)
+                self.db.commit()
                 raise ContaBloqueada(MSG_CONTA_BLOQUEADA)
             # Bloqueio vencido: o usuário recomeça com todas as tentativas.
             repositorio.atualizar(usuario, tentativas_login=0, bloqueado_ate=None)
@@ -118,6 +141,7 @@ class AuthService:
             if tentativas >= settings.LOGIN_MAX_TENTATIVAS:
                 campos["bloqueado_ate"] = agora + timedelta(minutes=settings.LOGIN_BLOQUEIO_MINUTOS)
             repositorio.atualizar(usuario, **campos)
+            self._registrar_falha_do_ip(ip, email)
             self.db.commit()
             raise CredenciaisInvalidas(MSG_CREDENCIAIS_INVALIDAS)
 
