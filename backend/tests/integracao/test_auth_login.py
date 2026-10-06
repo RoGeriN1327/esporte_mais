@@ -71,7 +71,7 @@ class TestLoginBemSucedido:
         registro = db.scalar(select(RefreshToken))
         assert registro.token_hash == security.hash_token(refresh)
         assert registro.token_hash != refresh
-        assert registro.expira_em == AGORA + timedelta(days=7)
+        assert registro.expira_em == AGORA + timedelta(hours=2)
 
 
 class TestCredenciaisInvalidas:

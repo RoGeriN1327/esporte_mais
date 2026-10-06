@@ -1,5 +1,6 @@
 """Schemas de autenticação: login, tokens, logout e recuperação de senha."""
 
+from datetime import datetime
 from typing import Annotated
 
 from pydantic import AfterValidator, BaseModel, Field, model_validator
@@ -24,8 +25,11 @@ class UsuarioBasicoOut(BaseModel):
 
 
 class TokenResponse(BaseModel):
-    access_token: str = Field(description="JWT de acesso (30 min)")
-    refresh_token: str = Field(description="Token opaco de renovação (7 dias)")
+    access_token: str = Field(description="JWT de acesso (30 min, nunca além do fim da sessão)")
+    refresh_token: str = Field(description="Token opaco de renovação (vale até o fim da sessão)")
+    sessao_expira_em: datetime = Field(
+        description="Fim da sessão (2 horas após o login); renovar os tokens não o estende"
+    )
     # "bearer" é o tipo de token do padrão OAuth2 (RFC 6750), não uma senha.
     token_type: str = "bearer"  # noqa: S105
     usuario: UsuarioBasicoOut

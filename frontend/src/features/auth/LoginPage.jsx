@@ -35,6 +35,7 @@ export default function LoginPage() {
     <CartaoAuth titulo="Entrar" subtitulo="Acesse com o e-mail e a senha da sua conta.">
       <div className="space-y-5">
         {location.state?.mensagem && <Alerta tipo="sucesso">{location.state.mensagem}</Alerta>}
+        {location.state?.aviso && <Alerta tipo="aviso">{location.state.aviso}</Alerta>}
 
         <form className="space-y-5" onSubmit={handleSubmit(aoEntrar)} noValidate>
           <Campo label="E-mail" erro={errors.email?.message}>

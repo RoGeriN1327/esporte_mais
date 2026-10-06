@@ -57,10 +57,16 @@ def criar_access_token(
     usuario_id: int,
     tipo: TipoUsuario,
     perfil: PerfilAdministrativo | None = None,
+    sessao_expira_em: datetime | None = None,
 ) -> tuple[str, str, datetime]:
-    """Retorna (token, jti, expira_em). O jti permite revogar o token no logout."""
+    """Retorna (token, jti, expira_em). O jti permite revogar o token no logout.
+
+    Com sessao_expira_em, o token nunca vale além do fim da sessão.
+    """
     agora = datetime.now(UTC)
     expira_em = agora + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    if sessao_expira_em is not None:
+        expira_em = min(expira_em, sessao_expira_em)
     jti = str(uuid.uuid4())
     claims = {
         "sub": str(usuario_id),

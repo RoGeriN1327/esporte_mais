@@ -1,13 +1,22 @@
 // Cliente HTTP único da aplicação (axios) e gestão dos tokens de sessão.
 //
 // - O access token (JWT, 30 min) fica só em memória e vai no header Authorization.
-// - O refresh token (7 dias) fica no localStorage para manter o login ao recarregar.
+// - O refresh token fica no localStorage para manter o login ao recarregar.
+// - A sessão dura 2 horas a partir do login (sessao_expira_em, definido pelo backend);
+//   renovar os tokens não a estende. Ao fim dela o AuthContext volta para o login.
 // - Se uma requisição voltar 401, o interceptor renova os tokens uma única vez e
 //   repete a requisição; se a renovação falhar, a sessão local é encerrada.
 import axios from 'axios'
 
 export const CHAVE_REFRESH = 'esporte_refresh_token'
 export const CHAVE_USUARIO = 'esporte_usuario'
+export const CHAVE_SESSAO_EXPIRA = 'esporte_sessao_expira_em'
+
+/** true quando há um fim de sessão salvo e ele já passou. */
+export function sessaoVencida() {
+  const fim = Date.parse(localStorage.getItem(CHAVE_SESSAO_EXPIRA) || '')
+  return Number.isFinite(fim) && Date.now() >= fim
+}
 
 // VITE_API_URL é embutida no bundle durante o build (não é lida em tempo de execução).
 // Só em desenvolvimento existe o valor padrão; o build de produção falha sem ela
@@ -60,11 +69,13 @@ export function renovarSessao() {
   if (renovacaoEmCurso) return renovacaoEmCurso
   const refresh = localStorage.getItem(CHAVE_REFRESH)
   if (!refresh) return Promise.reject(new Error('Sem sessão salva para renovar.'))
+  if (sessaoVencida()) return Promise.reject(new Error('Sessão expirada.'))
 
   renovacaoEmCurso = trocarRefreshToken(refresh)
     .then((data) => {
       localStorage.setItem(CHAVE_REFRESH, data.refresh_token)
       localStorage.setItem(CHAVE_USUARIO, JSON.stringify(data.usuario))
+      localStorage.setItem(CHAVE_SESSAO_EXPIRA, data.sessao_expira_em)
       definirAccessToken(data.access_token)
       return data
     })
@@ -89,6 +100,7 @@ api.interceptors.response.use(
         } catch {
           localStorage.removeItem(CHAVE_REFRESH)
           localStorage.removeItem(CHAVE_USUARIO)
+          localStorage.removeItem(CHAVE_SESSAO_EXPIRA)
           definirAccessToken(null)
           if (aoExpirarSessao) aoExpirarSessao()
         }
