@@ -1,7 +1,8 @@
 // Consulta de quadras (RF003, fluxo básico; campos do Quadro 23 e botões do Quadro 24 do DERS).
-// A busca só acontece ao clicar em "Buscar"; os filtros ficam só em memória (URL limpa).
+// Ao abrir, lista todas as quadras ativas; os filtros só refinam o resultado e ficam só em
+// memória (URL limpa).
 import { useQuery } from '@tanstack/react-query'
-import { TbAdjustmentsHorizontal, TbMapPin, TbSearch, TbSearchOff } from 'react-icons/tb'
+import { TbMapPin, TbSearch, TbSearchOff } from 'react-icons/tb'
 import { useNavigate } from 'react-router-dom'
 
 import * as quadrasApi from '../../api/quadras.api'
@@ -41,7 +42,7 @@ function CartaoQuadra({ quadra, onSelecionar }) {
 
 export default function QuadrasPage() {
   const navigate = useNavigate()
-  const consulta = useConsulta(CHAVES)
+  const consulta = useConsulta(CHAVES, { consultarAoAbrir: true })
 
   const { data: opcoes } = useQuery({ queryKey: ['quadras-filtros'], queryFn: quadrasApi.opcoesDeFiltro })
   const { data: quadras, isFetching, isError } = useQuery({
@@ -55,16 +56,7 @@ export default function QuadrasPage() {
   }
 
   let resultado
-  if (!consulta.consultado) {
-    resultado = (
-      <EstadoVazio
-        tom="marca"
-        Icone={TbAdjustmentsHorizontal}
-        titulo="Encontre uma quadra para jogar"
-        descricao="Escolha o esporte, o nome da quadra ou o bairro e clique em “Buscar”. Para ver todas as quadras, clique em “Buscar” sem preencher nada."
-      />
-    )
-  } else if (isFetching) {
+  if (isFetching) {
     resultado = <Carregando texto="Buscando quadras…" />
   } else if (isError) {
     resultado = <Alerta tipo="erro">Não foi possível buscar as quadras. Tente novamente em instantes.</Alerta>
@@ -97,7 +89,7 @@ export default function QuadrasPage() {
         voltarPara="/"
         voltarTexto="Início"
         titulo="Agendar quadra"
-        descricao="Consulte as quadras esportivas públicas disponíveis e selecione uma para escolher o horário."
+        descricao="Veja as quadras esportivas públicas disponíveis e selecione uma para escolher o horário. Use os filtros para refinar a lista."
       />
 
       <div className="space-y-8">
