@@ -1,4 +1,4 @@
-import { Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom'
 
 import Layout from '../components/Layout'
 import { Carregando } from '../components/ui'
@@ -10,6 +10,7 @@ import RedefinirSenhaPage from '../features/auth/RedefinirSenhaPage'
 import HomeAdminPage from '../features/home/HomeAdminPage'
 import HomePessoaPage from '../features/home/HomePessoaPage'
 import PerfilPage from '../features/perfil/PerfilPage'
+import LandingPage from '../features/publico/LandingPage'
 import AgendarPage from '../features/agendamentos/AgendarPage'
 import MeusAgendamentosPage from '../features/agendamentos/MeusAgendamentosPage'
 import QuadrasPage from '../features/agendamentos/QuadrasPage'
@@ -44,9 +45,12 @@ function RotaPublica() {
 }
 
 function RotaPessoa() {
-  const { usuario, carregando, ehPessoa } = useAuth()
+  const { usuario, carregando, ehPessoa, sessaoExpirada } = useAuth()
+  const { pathname } = useLocation()
   if (carregando) return <Carregando />
-  if (!usuario) return <IrParaLogin />
+  // Visitante na página inicial vê a apresentação pública; nas demais rotas (ou se a
+  // sessão acabou de expirar), vai para o login.
+  if (!usuario) return pathname === '/' && !sessaoExpirada ? <LandingPage /> : <IrParaLogin />
   if (!ehPessoa) return <Navigate to="/admin" replace />
   return <Outlet />
 }
@@ -68,6 +72,9 @@ function RotaGestor() {
 export default function Rotas() {
   return (
     <Routes>
+      {/* Pública para todos, logados ou não (link "Regras de uso"). */}
+      <Route path="/sobre" element={<LandingPage />} />
+
       <Route element={<RotaPublica />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/cadastro" element={<CadastroPage />} />

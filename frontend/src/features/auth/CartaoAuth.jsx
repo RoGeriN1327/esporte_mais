@@ -15,7 +15,9 @@ export default function CartaoAuth({ titulo, subtitulo, voltarPara, voltarTexto 
           height="900"
           className="pointer-events-none absolute -right-40 top-1/2 h-[120%] w-auto -translate-y-1/2 opacity-[0.09]"
         />
-        <img src="/marca/logo-branco.svg" alt="Esporte+" width="172" height="44" className="relative h-11 w-auto self-start" />
+        <Link to="/sobre" className="relative self-start rounded-md focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-white">
+          <img src="/marca/logo-branco.svg" alt="Esporte+ — página inicial" width="172" height="44" className="h-11 w-auto" />
+        </Link>
         <div className="relative max-w-md">
           <p className="text-[2rem] font-extrabold leading-tight">
             As quadras esportivas públicas de Rio Verde, agendadas pela internet.
@@ -25,7 +27,15 @@ export default function CartaoAuth({ titulo, subtitulo, voltarPara, voltarTexto 
             Secretaria.
           </p>
         </div>
-        <p className="relative text-sm font-medium text-marca-200">Secretaria Municipal de Esportes · Rio Verde – GO</p>
+        <div className="relative flex flex-wrap items-center justify-between gap-3 text-sm font-medium text-marca-200">
+          <p>Secretaria Municipal de Esportes · Rio Verde – GO</p>
+          <Link
+            to="/sobre"
+            className="rounded-md font-bold text-white underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white"
+          >
+            Regras de uso e dúvidas
+          </Link>
+        </div>
       </aside>
 
       <main className="flex flex-col px-5 py-8 sm:px-10">
@@ -46,7 +56,15 @@ export default function CartaoAuth({ titulo, subtitulo, voltarPara, voltarTexto 
             <div className="mt-8">{children}</div>
           </div>
         </div>
-        <p className="text-center text-xs text-cinza-500 lg:hidden">Secretaria Municipal de Esportes · Rio Verde – GO</p>
+        <div className="space-y-2 text-center text-xs text-cinza-500 lg:hidden">
+          <Link
+            to="/sobre"
+            className="rounded-md text-sm font-bold text-marca-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-marca-600"
+          >
+            Regras de uso e dúvidas
+          </Link>
+          <p>Secretaria Municipal de Esportes · Rio Verde – GO</p>
+        </div>
       </main>
     </div>
   )
