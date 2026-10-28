@@ -20,7 +20,7 @@ import {
   ResultadoConsulta,
 } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
+import { Alerta, Badge, Botao, Campo, LegendaObrigatorio, Modal } from '../../components/ui'
 import { useConsulta } from '../../hooks/useConsulta'
 import { cpfValido, mascararCpf, somenteDigitos } from '../../utils/cpf'
 import { formatarData } from '../../utils/datas'
@@ -43,7 +43,8 @@ function FormularioUsuario({ aoSalvar, aoCancelar, salvando, erro }) {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm()
   return (
     <form className="space-y-5" onSubmit={handleSubmit(aoSalvar)} noValidate>
-      <Campo label="Nome completo" erro={errors.nome?.message}>
+      <LegendaObrigatorio />
+      <Campo label="Nome completo" obrigatorio erro={errors.nome?.message}>
         <input
           className={classesDeInput(errors.nome)}
           autoComplete="off"
@@ -51,7 +52,7 @@ function FormularioUsuario({ aoSalvar, aoCancelar, salvando, erro }) {
           {...register('nome', { required: 'Informe o nome completo.' })}
         />
       </Campo>
-      <Campo label="CPF" erro={errors.cpf?.message}>
+      <Campo label="CPF" obrigatorio erro={errors.cpf?.message}>
         <input
           className={`${classesDeInput(errors.cpf)} tabular-nums`}
           inputMode="numeric"
@@ -64,7 +65,7 @@ function FormularioUsuario({ aoSalvar, aoCancelar, salvando, erro }) {
           })}
         />
       </Campo>
-      <Campo label="E-mail" erro={errors.email?.message} dica="O cidadão recebe neste e-mail a senha de acesso gerada pelo sistema.">
+      <Campo label="E-mail" obrigatorio erro={errors.email?.message} dica="O cidadão recebe neste e-mail a senha de acesso gerada pelo sistema.">
         <input
           type="email"
           inputMode="email"

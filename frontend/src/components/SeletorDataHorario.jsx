@@ -5,9 +5,11 @@ import { TbCalendarOff, TbClockHour4 } from 'react-icons/tb'
 import * as quadrasApi from '../api/quadras.api'
 import { hojeISO, horaCurta } from '../utils/datas'
 import { classesDeInput } from './estilos'
-import { Campo, Spinner } from './ui'
+import { Campo, LegendaObrigatorio, MarcaObrigatorio, Spinner } from './ui'
 
-export default function SeletorDataHorario({ quadraId, data, hora, onMudarData, onMudarHora }) {
+// Data e horário são sempre obrigatórios. `comLegenda={false}` quando o formulário em
+// volta já exibe a legenda de campos obrigatórios.
+export default function SeletorDataHorario({ quadraId, data, hora, onMudarData, onMudarHora, comLegenda = true }) {
   const { data: disponibilidade, isFetching } = useQuery({
     queryKey: ['horarios-disponiveis', quadraId, data],
     queryFn: () => quadrasApi.horariosDisponiveis(quadraId, data),
@@ -64,7 +66,8 @@ export default function SeletorDataHorario({ quadraId, data, hora, onMudarData, 
 
   return (
     <div className="space-y-5">
-      <Campo label="Data">
+      {comLegenda && <LegendaObrigatorio />}
+      <Campo label="Data" obrigatorio>
         <input
           type="date"
           className={classesDeInput(false)}
@@ -77,7 +80,10 @@ export default function SeletorDataHorario({ quadraId, data, hora, onMudarData, 
         />
       </Campo>
       <fieldset>
-        <legend className="mb-1.5 text-sm font-semibold text-cinza-800">Horários disponíveis</legend>
+        <legend className="mb-1.5 text-sm font-semibold text-cinza-800">
+          Horários disponíveis
+          <MarcaObrigatorio />
+        </legend>
         <div aria-live="polite">{conteudoHorarios}</div>
       </fieldset>
     </div>

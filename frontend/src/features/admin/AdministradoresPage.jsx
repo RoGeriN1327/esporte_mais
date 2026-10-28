@@ -20,7 +20,7 @@ import {
   ResultadoConsulta,
 } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
+import { Alerta, Badge, Botao, Campo, LegendaObrigatorio, Modal } from '../../components/ui'
 import { useAuth } from '../../contexts/useAuth'
 import { useConsulta } from '../../hooks/useConsulta'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
@@ -48,7 +48,8 @@ function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro
 
   return (
     <form className="space-y-5" onSubmit={handleSubmit(aoSalvar)} noValidate>
-      <Campo label="Nome completo" erro={errors.nome?.message}>
+      <LegendaObrigatorio />
+      <Campo label="Nome completo" obrigatorio erro={errors.nome?.message}>
         <input
           className={classesDeInput(errors.nome)}
           autoComplete="off"
@@ -57,7 +58,7 @@ function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro
         />
       </Campo>
       <div className="grid gap-5 sm:grid-cols-2">
-        <Campo label="CPF" erro={errors.cpf?.message}>
+        <Campo label="CPF" obrigatorio erro={errors.cpf?.message}>
           <input
             className={`${classesDeInput(errors.cpf)} tabular-nums`}
             inputMode="numeric"
@@ -70,7 +71,7 @@ function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro
             })}
           />
         </Campo>
-        <Campo label="Perfil" erro={errors.perfil?.message}>
+        <Campo label="Perfil" obrigatorio erro={errors.perfil?.message}>
           <select className={classesDeInput(errors.perfil)} {...register('perfil', { required: 'Selecione o perfil.' })}>
             <option value="">Selecione…</option>
             <option value="Operador">Operador</option>
@@ -80,6 +81,7 @@ function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro
       </div>
       <Campo
         label="E-mail"
+        obrigatorio
         erro={errors.email?.message}
         dica={inicial ? 'A alteração de perfil passa a valer na próxima sessão.' : 'A senha temporária de acesso é enviada para este e-mail.'}
       >

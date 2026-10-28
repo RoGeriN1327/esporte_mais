@@ -6,7 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { mensagemDeErro } from '../../api/client'
 import CampoSenha from '../../components/CampoSenha'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Botao, Campo } from '../../components/ui'
+import { Alerta, Botao, Campo, LegendaObrigatorio } from '../../components/ui'
 import { useAuth } from '../../contexts/useAuth'
 import CartaoAuth from './CartaoAuth'
 
@@ -38,7 +38,8 @@ export default function LoginPage() {
         {location.state?.aviso && <Alerta tipo="aviso">{location.state.aviso}</Alerta>}
 
         <form className="space-y-5" onSubmit={handleSubmit(aoEntrar)} noValidate>
-          <Campo label="E-mail" erro={errors.email?.message}>
+          <LegendaObrigatorio />
+          <Campo label="E-mail" obrigatorio erro={errors.email?.message}>
             <input
               type="email"
               inputMode="email"
@@ -51,7 +52,7 @@ export default function LoginPage() {
           </Campo>
 
           <div className="relative">
-            <CampoSenha label="Senha" erro={errors.senha?.message} {...register('senha', { required: 'Informe a senha.' })} />
+            <CampoSenha label="Senha" obrigatorio erro={errors.senha?.message} {...register('senha', { required: 'Informe a senha.' })} />
             <Link
               to="/recuperar-senha"
               className="absolute right-0 top-0 rounded text-sm font-semibold text-marca-700 underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-marca-600"

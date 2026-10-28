@@ -10,7 +10,7 @@ import { mensagemDeErro } from '../../api/client'
 import * as usuariosApi from '../../api/usuarios.api'
 import { CabecalhoPagina, Cartao } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Botao, Campo, Carregando, Modal } from '../../components/ui'
+import { Alerta, Botao, Campo, Carregando, LegendaObrigatorio, Modal } from '../../components/ui'
 import { useAuth } from '../../contexts/useAuth'
 import { mascararCpf } from '../../utils/cpf'
 
@@ -81,6 +81,7 @@ export default function PerfilPage() {
       <div className="space-y-6">
         <Cartao titulo="Dados pessoais" descricao="Nome e CPF não podem ser alterados. Você pode atualizar seu e-mail.">
           <form className="space-y-5" onSubmit={aoSalvar} noValidate>
+            <LegendaObrigatorio />
             <div className="grid gap-5 sm:grid-cols-2">
               <Campo label="Nome completo">
                 <input className={classesDeInput(false)} value={perfil?.nome ?? ''} disabled readOnly />
@@ -89,7 +90,7 @@ export default function PerfilPage() {
                 <input className={`${classesDeInput(false)} tabular-nums`} value={mascararCpf(perfil?.cpf ?? '')} disabled readOnly />
               </Campo>
             </div>
-            <Campo label="E-mail" erro={erroEmail}>
+            <Campo label="E-mail" obrigatorio erro={erroEmail}>
               <input
                 type="email"
                 name="email"
