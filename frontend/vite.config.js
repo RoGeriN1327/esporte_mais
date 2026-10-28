@@ -33,7 +33,7 @@ export default defineConfig(({ command, mode }) => {
       environment: 'jsdom',
       include: ['src/**/*.test.{js,jsx}'],
       coverage: {
-        include: ['src/utils/**', 'src/api/client.js'],
+        include: ['src/utils/**', 'src/api/client.js', 'src/api/lentidao.js'],
         reporter: ['text', 'html'],
         reportsDirectory: 'relatorios/cobertura',
       },
