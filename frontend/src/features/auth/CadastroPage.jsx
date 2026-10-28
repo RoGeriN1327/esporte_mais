@@ -6,7 +6,7 @@ import { mensagemDeErro } from '../../api/client'
 import * as usuariosApi from '../../api/usuarios.api'
 import CampoSenha from '../../components/CampoSenha'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Botao, Campo } from '../../components/ui'
+import { Alerta, Botao, Campo, LegendaObrigatorio } from '../../components/ui'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
 import CartaoAuth from './CartaoAuth'
 
@@ -38,7 +38,8 @@ export default function CadastroPage() {
   return (
     <CartaoAuth voltarPara="/login" titulo="Criar uma conta" subtitulo="Informe seus dados para se cadastrar.">
       <form className="space-y-5" onSubmit={handleSubmit(aoCadastrar)} noValidate>
-        <Campo label="Nome Completo" erro={errors.nome?.message}>
+        <LegendaObrigatorio />
+        <Campo label="Nome Completo" obrigatorio erro={errors.nome?.message}>
           <input
             className={classesDeInput(errors.nome)}
             autoComplete="name"
@@ -46,7 +47,7 @@ export default function CadastroPage() {
             {...register('nome', { required: 'Informe o nome completo.' })}
           />
         </Campo>
-        <Campo label="CPF" erro={errors.cpf?.message}>
+        <Campo label="CPF" obrigatorio erro={errors.cpf?.message}>
           <input
             className={classesDeInput(errors.cpf)}
             inputMode="numeric"
@@ -59,7 +60,7 @@ export default function CadastroPage() {
             })}
           />
         </Campo>
-        <Campo label="E-mail" erro={errors.email?.message}>
+        <Campo label="E-mail" obrigatorio erro={errors.email?.message}>
           <input
             type="email"
             inputMode="email"
@@ -75,6 +76,7 @@ export default function CadastroPage() {
         </Campo>
         <CampoSenha
           label="Senha"
+          obrigatorio
           erro={errors.senha?.message}
           dica="Mínimo de 8 caracteres."
           autoComplete="new-password"
@@ -85,6 +87,7 @@ export default function CadastroPage() {
         />
         <CampoSenha
           label="Confirmar senha"
+          obrigatorio
           erro={errors.confirmarSenha?.message}
           autoComplete="new-password"
           {...register('confirmarSenha', {

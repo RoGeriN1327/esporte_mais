@@ -18,7 +18,7 @@ import {
   ResultadoConsulta,
 } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
+import { Alerta, Badge, Botao, Campo, LegendaObrigatorio, MarcaObrigatorio, Modal } from '../../components/ui'
 import { useConsulta } from '../../hooks/useConsulta'
 import { DIAS_SEMANA, horaCurta } from '../../utils/datas'
 
@@ -72,22 +72,26 @@ function FormularioQuadra({ inicial, edicao, aoSalvar, aoCancelar, salvando, err
 
   return (
     <form className="space-y-6" onSubmit={aoEnviar} noValidate>
+      <LegendaObrigatorio />
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <Campo label="Nome da quadra">
+          <Campo label="Nome da quadra" obrigatorio>
             <input className={classesDeInput(false)} autoComplete="off" maxLength={100} value={nome} onChange={(e) => setNome(e.target.value)} />
           </Campo>
         </div>
-        <Campo label="Endereço completo">
+        <Campo label="Endereço completo" obrigatorio>
           <input className={classesDeInput(false)} autoComplete="off" maxLength={255} value={endereco} onChange={(e) => setEndereco(e.target.value)} />
         </Campo>
-        <Campo label="Bairro">
+        <Campo label="Bairro" obrigatorio>
           <input className={classesDeInput(false)} autoComplete="off" maxLength={100} value={bairro} onChange={(e) => setBairro(e.target.value)} />
         </Campo>
       </div>
 
       <fieldset>
-        <legend className="text-sm font-semibold text-cinza-800">{edicao ? 'Esporte' : 'Esportes'}</legend>
+        <legend className="text-sm font-semibold text-cinza-800">
+          {edicao ? 'Esporte' : 'Esportes'}
+          <MarcaObrigatorio />
+        </legend>
         <p className="mb-2.5 mt-0.5 text-xs text-cinza-500">
           {edicao ? 'Cada registro de quadra tem um único esporte.' : 'Selecione um ou mais. É criado um registro de quadra para cada esporte.'}
         </p>
@@ -112,7 +116,7 @@ function FormularioQuadra({ inicial, edicao, aoSalvar, aoCancelar, salvando, err
         </div>
       </fieldset>
 
-      <Campo label="Descrição" dica={`${descricao.length}/300 caracteres`}>
+      <Campo label="Descrição" obrigatorio dica={`${descricao.length}/300 caracteres`}>
         <textarea
           className={classesDeInput(false, { multilinha: true })}
           rows={3}
@@ -123,7 +127,10 @@ function FormularioQuadra({ inicial, edicao, aoSalvar, aoCancelar, salvando, err
       </Campo>
 
       <fieldset>
-        <legend className="text-sm font-semibold text-cinza-800">Horários disponíveis</legend>
+        <legend className="text-sm font-semibold text-cinza-800">
+          Horários disponíveis
+          <MarcaObrigatorio />
+        </legend>
         <p className="mb-2.5 mt-0.5 text-xs text-cinza-500">Marque os dias de funcionamento e defina o horário de cada um.</p>
         <div className="divide-y divide-cinza-100 rounded-xl border border-cinza-200">
           {grade.map((linha) => (

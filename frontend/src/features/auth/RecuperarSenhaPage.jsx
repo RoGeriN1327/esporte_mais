@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom'
 import { mensagemDeErro } from '../../api/client'
 import * as authApi from '../../api/auth.api'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Botao, Campo } from '../../components/ui'
+import { Alerta, Botao, Campo, LegendaObrigatorio } from '../../components/ui'
 import { cpfValido, mascararCpf } from '../../utils/cpf'
 import CartaoAuth from './CartaoAuth'
 
@@ -43,7 +43,8 @@ export default function RecuperarSenhaPage() {
         </div>
       ) : (
         <form className="space-y-5" onSubmit={handleSubmit(aoEnviar)} noValidate>
-          <Campo label="E-mail" erro={errors.email?.message}>
+          <LegendaObrigatorio />
+          <Campo label="E-mail" obrigatorio erro={errors.email?.message}>
             <input
               type="email"
               inputMode="email"
@@ -54,7 +55,7 @@ export default function RecuperarSenhaPage() {
               {...register('email', { required: 'Informe o e-mail.' })}
             />
           </Campo>
-          <Campo label="CPF" erro={errors.cpf?.message}>
+          <Campo label="CPF" obrigatorio erro={errors.cpf?.message}>
             <input
               className={classesDeInput(errors.cpf)}
               inputMode="numeric"

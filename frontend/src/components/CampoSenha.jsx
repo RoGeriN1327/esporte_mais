@@ -7,14 +7,14 @@ import { classesDeInput } from './estilos'
 import { Campo } from './ui'
 
 const CampoSenha = forwardRef(function CampoSenha(
-  { label, erro, dica, autoComplete = 'current-password', ...props },
+  { label, erro, dica, obrigatorio = false, autoComplete = 'current-password', ...props },
   ref,
 ) {
   const id = useId()
   const [visivel, setVisivel] = useState(false)
 
   return (
-    <Campo id={id} label={label} erro={erro} dica={dica}>
+    <Campo id={id} label={label} erro={erro} dica={dica} obrigatorio={obrigatorio}>
       <div className="relative">
         <input
           ref={ref}
@@ -23,6 +23,7 @@ const CampoSenha = forwardRef(function CampoSenha(
           autoComplete={autoComplete}
           spellCheck={false}
           aria-invalid={erro ? true : undefined}
+          aria-required={obrigatorio || undefined}
           aria-describedby={erro || dica ? `${id}-mensagem` : undefined}
           className={`${classesDeInput(erro)} pr-11`}
           {...props}

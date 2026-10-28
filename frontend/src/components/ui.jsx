@@ -50,7 +50,25 @@ const CONTROLES = new Set(['input', 'select', 'textarea'])
  * aria-invalid e o aria-describedby são ligados automaticamente; para campos compostos,
  * passe `id` e aplique-o no controle.
  */
-export function Campo({ label, erro, dica, id, children }) {
+/** Asterisco vermelho dos campos obrigatórios (o leitor de tela usa o aria-required). */
+export function MarcaObrigatorio() {
+  return (
+    <span aria-hidden="true" className="ml-0.5 text-erro-600">
+      *
+    </span>
+  )
+}
+
+/** Legenda no topo dos formulários que têm campos obrigatórios. */
+export function LegendaObrigatorio() {
+  return (
+    <p className="text-xs text-cinza-500">
+      Campos marcados com <span className="font-bold text-erro-600">*</span> são obrigatórios.
+    </p>
+  )
+}
+
+export function Campo({ label, erro, dica, id, obrigatorio = false, children }) {
   const idGerado = useId()
   const idCampo = id ?? idGerado
   const idMensagem = `${idCampo}-mensagem`
@@ -63,6 +81,7 @@ export function Campo({ label, erro, dica, id, children }) {
         id: children.props.id ?? idCampo,
         'aria-invalid': erro ? true : undefined,
         'aria-describedby': temMensagem ? idMensagem : undefined,
+        'aria-required': obrigatorio || undefined,
       })
     : children
 
@@ -70,6 +89,7 @@ export function Campo({ label, erro, dica, id, children }) {
     <div>
       <label htmlFor={idCampo} className="mb-1.5 block text-sm font-semibold text-cinza-800">
         {label}
+        {obrigatorio && <MarcaObrigatorio />}
       </label>
       {filho}
       {dica && !erro && (

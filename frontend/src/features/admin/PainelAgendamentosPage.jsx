@@ -19,7 +19,7 @@ import {
 } from '../../components/Pagina'
 import SeletorDataHorario from '../../components/SeletorDataHorario'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Badge, Botao, Campo, Modal } from '../../components/ui'
+import { Alerta, Badge, Botao, Campo, LegendaObrigatorio, Modal } from '../../components/ui'
 import { useConsulta } from '../../hooks/useConsulta'
 import { cpfValido, mascararCpf, somenteDigitos } from '../../utils/cpf'
 import { dataExtensa, formatarDataHora, formatarHora, partesDaData } from '../../utils/datas'
@@ -237,7 +237,8 @@ export default function PainelAgendamentosPage() {
 
       <Modal aberto={modal?.modo === 'novo'} titulo="Novo agendamento" onFechar={() => setModal(null)}>
         <div className="space-y-5">
-          <Campo label="CPF do cidadão" erro={cpfNovo.length === 14 && !cpfValido(cpfNovo) ? 'CPF inválido. Confira os 11 dígitos.' : ''}>
+          <LegendaObrigatorio />
+          <Campo label="CPF do cidadão" obrigatorio erro={cpfNovo.length === 14 && !cpfValido(cpfNovo) ? 'CPF inválido. Confira os 11 dígitos.' : ''}>
             <input
               className={`${classesDeInput(cpfNovo.length === 14 && !cpfValido(cpfNovo))} tabular-nums`}
               inputMode="numeric"
@@ -247,7 +248,7 @@ export default function PainelAgendamentosPage() {
               onChange={(evento) => setCpfNovo(mascararCpf(evento.target.value))}
             />
           </Campo>
-          <Campo label="Quadra">
+          <Campo label="Quadra" obrigatorio>
             <select
               className={classesDeInput(false)}
               value={quadraNova}
@@ -267,6 +268,7 @@ export default function PainelAgendamentosPage() {
           </Campo>
           {quadraNova && (
             <SeletorDataHorario
+              comLegenda={false}
               quadraId={Number(quadraNova)}
               data={dataSelecionada}
               hora={horaSelecionada}

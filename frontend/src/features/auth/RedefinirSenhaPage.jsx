@@ -6,7 +6,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { mensagemDeErro } from '../../api/client'
 import * as authApi from '../../api/auth.api'
 import CampoSenha from '../../components/CampoSenha'
-import { Alerta, Botao, Carregando } from '../../components/ui'
+import { Alerta, Botao, Carregando, LegendaObrigatorio } from '../../components/ui'
 import CartaoAuth from './CartaoAuth'
 
 const CLASSE_BOTAO_SECUNDARIO =
@@ -91,8 +91,10 @@ export default function RedefinirSenhaPage() {
   return (
     <CartaoAuth titulo="Redefinir senha" subtitulo="Crie a sua nova senha de acesso.">
       <form className="mt-5 space-y-5" onSubmit={handleSubmit(aoSalvar)} noValidate>
+        <LegendaObrigatorio />
         <CampoSenha
           label="Nova senha"
+          obrigatorio
           erro={errors.novaSenha?.message}
           dica="Mínimo de 8 caracteres."
           autoComplete="new-password"
@@ -103,6 +105,7 @@ export default function RedefinirSenhaPage() {
         />
         <CampoSenha
           label="Confirmar nova senha"
+          obrigatorio
           erro={errors.confirmarSenha?.message}
           autoComplete="new-password"
           {...register('confirmarSenha', {

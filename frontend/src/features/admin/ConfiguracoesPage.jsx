@@ -8,7 +8,7 @@ import * as adminApi from '../../api/admin.api'
 import { mensagemDeErro } from '../../api/client'
 import { BarraAcoes, CabecalhoPagina, Cartao } from '../../components/Pagina'
 import { classesDeInput } from '../../components/estilos'
-import { Alerta, Botao, Carregando } from '../../components/ui'
+import { Alerta, Botao, Carregando, LegendaObrigatorio, MarcaObrigatorio } from '../../components/ui'
 import { formatarDataHora } from '../../utils/datas'
 
 export default function ConfiguracoesPage() {
@@ -48,6 +48,7 @@ function CampoHoras({ id, Icone, titulo, descricao, valor, onMudar, min, max }) 
         <div>
           <label htmlFor={id} className="font-extrabold text-cinza-900">
             {titulo}
+            <MarcaObrigatorio />
           </label>
           <p id={`${id}-descricao`} className="mt-1 max-w-sm text-sm text-cinza-600">
             {descricao}
@@ -62,6 +63,7 @@ function CampoHoras({ id, Icone, titulo, descricao, valor, onMudar, min, max }) 
           min={min}
           max={max}
           aria-describedby={`${id}-descricao`}
+          aria-required="true"
           className={`${classesDeInput(false)} pr-16 text-right font-bold tabular-nums`}
           value={valor}
           onChange={(evento) => onMudar(evento.target.value)}
@@ -107,6 +109,7 @@ function FormularioConfiguracoes({ configuracoes }) {
       }}
       className="space-y-6"
     >
+      <LegendaObrigatorio />
       <Cartao>
         <div className="divide-y divide-cinza-100">
           <CampoHoras
