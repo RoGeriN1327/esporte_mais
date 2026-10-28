@@ -1,10 +1,32 @@
 from fastapi import APIRouter
 
 from app.core.deps import GestorLogado, SessaoDb
-from app.schemas.agendamento import ConfiguracoesOut, ConfiguracoesUpdate
+from app.schemas.agendamento import ConfiguracoesOut, ConfiguracoesUpdate, RegrasDeUsoOut
 from app.services.configuracao_service import ConfiguracaoService
+from app.services.quadra_service import DURACAO_SLOT
 
 router = APIRouter(prefix="/admin/configuracoes", tags=["Configurações"])
+regras_router = APIRouter(prefix="/regras", tags=["Regras de uso"])
+
+# Regra fixa do sistema, garantida também por índice único no banco (ver agendamento_service).
+AGENDAMENTOS_ATIVOS_POR_USUARIO = 1
+
+
+@regras_router.get(
+    "",
+    response_model=RegrasDeUsoOut,
+    summary="Consultar regras de uso (público)",
+    description="Regras de agendamento exibidas na página pública de dúvidas frequentes: "
+    "prazo de cancelamento e antecedência do lembrete (configurados pelo Gestor), limite "
+    "de agendamentos ativos por cidadão e duração de cada horário. Não exige login.",
+)
+def obter_regras_de_uso(db: SessaoDb) -> RegrasDeUsoOut:
+    configuracoes = ConfiguracaoService(db).obter_todas()
+    return RegrasDeUsoOut(
+        **configuracoes,
+        agendamentos_ativos_por_usuario=AGENDAMENTOS_ATIVOS_POR_USUARIO,
+        duracao_horario_minutos=int(DURACAO_SLOT.total_seconds() // 60),
+    )
 
 
 @router.get(

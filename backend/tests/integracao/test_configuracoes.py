@@ -3,7 +3,8 @@
 Regras verificadas:
   * valores padrão: 2h de antecedência para cancelamento e lembrete 24h antes;
   * atualização parcial (só os campos informados mudam);
-  * limites: cancelamento de 0 a 168h, lembrete de 1 a 168h.
+  * limites: cancelamento de 0 a 168h, lembrete de 1 a 168h;
+  * regras de uso públicas (sem login) refletem as configurações atuais.
 
 O bloqueio de Operador e cidadão é verificado em test_matriz_de_permissoes.py.
 """
@@ -63,3 +64,21 @@ def test_valores_fora_dos_limites_sao_recusados_sem_alterar_nada(client, auth_ge
         resposta = client.put("/admin/configuracoes", json=dados, headers=auth_gestor)
         assert resposta.status_code == 422, dados
     assert _configuracoes(client, auth_gestor) == PADRAO
+
+
+def test_regras_de_uso_sao_publicas_e_refletem_as_configuracoes(client, auth_gestor):
+    resposta = client.get("/regras")
+    assert resposta.status_code == 200
+    assert resposta.json() == {
+        **PADRAO,
+        "agendamentos_ativos_por_usuario": 1,
+        "duracao_horario_minutos": 60,
+    }
+
+    novos = {"cancelamento_antecedencia_minima_horas": 6, "lembrete_antecedencia_horas": 12}
+    client.put("/admin/configuracoes", json=novos, headers=auth_gestor)
+    assert client.get("/regras").json() == {
+        **novos,
+        "agendamentos_ativos_por_usuario": 1,
+        "duracao_horario_minutos": 60,
+    }

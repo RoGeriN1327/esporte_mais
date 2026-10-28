@@ -6,6 +6,7 @@ import {
   TbCalendarEvent,
   TbCalendarPlus,
   TbChevronDown,
+  TbHelpCircle,
   TbHome,
   TbLayoutDashboard,
   TbListDetails,
@@ -111,6 +112,10 @@ function MenuUsuario({ nome, ehPessoa, onSair }) {
               Meu perfil
             </Link>
           )}
+          <Link to="/sobre" role="menuitem" onClick={() => setAberto(false)} className={`${CLASSE_ITEM_MENU} text-cinza-800 hover:bg-cinza-100`}>
+            <TbHelpCircle aria-hidden="true" className="size-[18px] text-cinza-500" />
+            Regras de uso
+          </Link>
           <button type="button" role="menuitem" onClick={onSair} className={`${CLASSE_ITEM_MENU} text-erro-700 hover:bg-erro-50`}>
             <TbLogout aria-hidden="true" className="size-[18px]" />
             Sair
@@ -166,6 +171,10 @@ function PainelCelular({ aberto, onFechar, itens, nome, ehPessoa, onSair }) {
               Meu perfil
             </Link>
           )}
+          <Link to="/sobre" onClick={onFechar} className={`${CLASSE_ITEM_MENU} py-3 text-cinza-800 hover:bg-cinza-100`}>
+            <TbHelpCircle aria-hidden="true" className="size-[18px] text-cinza-500" />
+            Regras de uso
+          </Link>
           <button type="button" onClick={onSair} className={`${CLASSE_ITEM_MENU} py-3 text-erro-700 hover:bg-erro-50`}>
             <TbLogout aria-hidden="true" className="size-[18px]" />
             Sair

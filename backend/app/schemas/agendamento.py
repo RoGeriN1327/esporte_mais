@@ -82,6 +82,21 @@ class ConfiguracoesOut(BaseModel):
     lembrete_antecedencia_horas: int
 
 
+class RegrasDeUsoOut(BaseModel):
+    """Regras de agendamento exibidas na página pública (sem dados sensíveis)."""
+
+    cancelamento_antecedencia_minima_horas: int = Field(
+        description="O cidadão só cancela o próprio agendamento até esta antecedência"
+    )
+    lembrete_antecedencia_horas: int = Field(
+        description="O lembrete por e-mail é enviado com esta antecedência"
+    )
+    agendamentos_ativos_por_usuario: int = Field(
+        description="Quantos agendamentos confirmados cada cidadão pode ter ao mesmo tempo"
+    )
+    duracao_horario_minutos: int = Field(description="Duração de cada horário agendado")
+
+
 class ConfiguracoesUpdate(BaseModel):
     cancelamento_antecedencia_minima_horas: int | None = Field(
         default=None, ge=0, le=168, description="Horas de antecedência mínima (0 a 168)"

@@ -21,6 +21,7 @@ from app.controllers.admin_controller import router as admin_router
 from app.controllers.agendamento_admin_controller import router as agendamento_admin_router
 from app.controllers.agendamento_controller import router as agendamento_router
 from app.controllers.auth_controller import router as auth_router
+from app.controllers.configuracao_controller import regras_router
 from app.controllers.configuracao_controller import router as configuracao_router
 from app.controllers.quadra_admin_controller import router as quadra_admin_router
 from app.controllers.quadra_controller import router as quadra_router
@@ -97,6 +98,7 @@ app.include_router(auth_router)
 app.include_router(usuario_router)
 app.include_router(quadra_router)
 app.include_router(agendamento_router)
+app.include_router(regras_router)
 
 # Área administrativa (Gestor e Operador)
 app.include_router(admin_router)
