@@ -124,10 +124,6 @@ function perguntasFrequentes(regras) {
       pergunta: 'Por que fui desconectado?',
       resposta: 'Por segurança, cada acesso dura no máximo 2 horas. Se você esquecer o computador logado, ninguém consegue usar sua conta depois desse tempo.',
     },
-    {
-      pergunta: 'O sistema demorou para abrir. Está fora do ar?',
-      resposta: 'Provavelmente não: depois de um tempo sem uso, o servidor entra em repouso e o primeiro acesso pode levar até 1 minuto. Aguarde um instante.',
-    },
   ]
 }
 
