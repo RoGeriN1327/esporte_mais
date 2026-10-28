@@ -44,6 +44,14 @@ function navAdmin(ehGestor) {
   ]
 }
 
+// A partir de qual largura a navegação aparece no cabeçalho (abaixo dela, vai para o painel
+// lateral). O menu administrativo tem até 6 itens e só cabe ao lado do perfil a partir de xl;
+// o do cidadão (3 itens) cabe desde lg. Classes completas para o Tailwind encontrá-las.
+const RESPONSIVO = {
+  lg: { nav: 'lg:flex', menu: 'lg:block', botao: 'lg:hidden' },
+  xl: { nav: 'xl:flex', menu: 'xl:block', botao: 'xl:hidden' },
+}
+
 /** Fecha algo (menu/painel) ao clicar fora do elemento ou ao pressionar Esc. */
 function useFecharFora(aberto, fechar, ref) {
   useEffect(() => {
@@ -63,7 +71,7 @@ function useFecharFora(aberto, fechar, ref) {
   }, [aberto, fechar, ref])
 }
 
-function LinkNavegacao({ item, aoClicar, empilhado = false }) {
+function LinkNavegacao({ item, aoClicar, empilhado = false, semIcone = false }) {
   const { para, rotulo, Icone, exato } = item
   return (
     <NavLink
@@ -76,7 +84,7 @@ function LinkNavegacao({ item, aoClicar, empilhado = false }) {
         } ${isActive ? 'bg-marca-50 text-marca-700' : 'text-cinza-600 hover:bg-cinza-100 hover:text-cinza-900'}`
       }
     >
-      <Icone aria-hidden="true" className="size-[18px] shrink-0" />
+      {!semIcone && <Icone aria-hidden="true" className="size-[18px] shrink-0" />}
       {rotulo}
     </NavLink>
   )
@@ -85,13 +93,13 @@ function LinkNavegacao({ item, aoClicar, empilhado = false }) {
 const CLASSE_ITEM_MENU =
   'flex w-full items-center gap-2.5 rounded-md px-3 py-2.5 text-left text-sm font-bold transition-colors focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-marca-600'
 
-function MenuUsuario({ nome, ehPessoa, onSair }) {
+function MenuUsuario({ nome, ehPessoa, onSair, responsivo }) {
   const [aberto, setAberto] = useState(false)
   const raiz = useRef(null)
   useFecharFora(aberto, () => setAberto(false), raiz)
 
   return (
-    <div ref={raiz} className="relative hidden lg:block">
+    <div ref={raiz} className={`relative hidden shrink-0 ${responsivo.menu}`}>
       <button
         type="button"
         onClick={() => setAberto((valor) => !valor)}
@@ -126,7 +134,7 @@ function MenuUsuario({ nome, ehPessoa, onSair }) {
   )
 }
 
-function PainelCelular({ aberto, onFechar, itens, nome, ehPessoa, onSair }) {
+function PainelCelular({ aberto, onFechar, itens, nome, ehPessoa, onSair, responsivo }) {
   useFecharFora(aberto, onFechar)
   const painel = useRef(null)
   useEffect(() => {
@@ -135,7 +143,7 @@ function PainelCelular({ aberto, onFechar, itens, nome, ehPessoa, onSair }) {
 
   if (!aberto) return null
   return (
-    <div className="fixed inset-0 z-50 lg:hidden">
+    <div className={`fixed inset-0 z-50 ${responsivo.botao}`}>
       <div aria-hidden="true" className="absolute inset-0 bg-cinza-900/40" onClick={onFechar} />
       <div
         ref={painel}
@@ -190,6 +198,7 @@ export default function Layout() {
   const navigate = useNavigate()
   const [painelAberto, setPainelAberto] = useState(false)
   const itens = ehAdmin ? navAdmin(ehGestor) : NAV_PESSOA
+  const responsivo = ehAdmin ? RESPONSIVO.xl : RESPONSIVO.lg
   const nome = usuario?.nome ?? ''
 
   async function aoSair() {
@@ -215,20 +224,21 @@ export default function Layout() {
             <img src="/marca/logo.svg" alt="Esporte+ — início" width="133" height="34" className="h-[34px] w-auto" />
           </Link>
 
-          <nav aria-label="Navegação principal" className="hidden min-w-0 flex-1 gap-1 lg:flex">
+          {/* No admin os itens ficam só com texto no cabeçalho, para caberem ao lado do perfil. */}
+          <nav aria-label="Navegação principal" className={`hidden min-w-0 flex-1 gap-1 ${responsivo.nav}`}>
             {itens.map((item) => (
-              <LinkNavegacao key={item.para} item={item} />
+              <LinkNavegacao key={item.para} item={item} semIcone={ehAdmin} />
             ))}
           </nav>
 
-          <div className="ml-auto flex items-center">
-            <MenuUsuario nome={nome} ehPessoa={ehPessoa} onSair={aoSair} />
+          <div className="ml-auto flex shrink-0 items-center pl-4">
+            <MenuUsuario nome={nome} ehPessoa={ehPessoa} onSair={aoSair} responsivo={responsivo} />
             <button
               type="button"
               onClick={() => setPainelAberto(true)}
               aria-label="Abrir menu"
               aria-expanded={painelAberto}
-              className="grid size-10 place-items-center rounded-lg text-cinza-700 transition-colors hover:bg-cinza-100 focus-visible:outline-2 focus-visible:outline-marca-600 lg:hidden"
+              className={`grid size-10 place-items-center rounded-lg text-cinza-700 transition-colors hover:bg-cinza-100 focus-visible:outline-2 focus-visible:outline-marca-600 ${responsivo.botao}`}
             >
               <TbMenu2 aria-hidden="true" className="size-6" />
             </button>
@@ -243,6 +253,7 @@ export default function Layout() {
         nome={nome}
         ehPessoa={ehPessoa}
         onSair={aoSair}
+        responsivo={responsivo}
       />
 
       <main id="conteudo" className="mx-auto max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
