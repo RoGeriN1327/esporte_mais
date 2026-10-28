@@ -8,6 +8,8 @@
 //   repete a requisição; se a renovação falhar, a sessão local é encerrada.
 import axios from 'axios'
 
+import * as lentidao from './lentidao'
+
 export const CHAVE_REFRESH = 'esporte_refresh_token'
 export const CHAVE_USUARIO = 'esporte_usuario'
 export const CHAVE_SESSAO_EXPIRA = 'esporte_sessao_expira_em'
@@ -38,6 +40,7 @@ export function registrarSessaoExpirada(callback) {
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
+  config._idLentidao = lentidao.iniciar()
   return config
 })
 
@@ -50,14 +53,20 @@ let renovacaoEmCurso = null
 
 async function trocarRefreshToken(refresh) {
   try {
-    const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refresh_token: refresh })
+    // Ao recarregar a página esta costuma ser a primeira chamada: se a API estiver
+    // "acordando", é ela que demora, então também entra no monitor de lentidão.
+    const { data } = await lentidao.monitorar(
+      axios.post(`${api.defaults.baseURL}/auth/refresh`, { refresh_token: refresh }),
+    )
     return data
   } catch (erro) {
     // Outra aba pode ter renovado primeiro: o token que enviamos já foi trocado e o
     // localStorage tem o novo. Nesse caso tenta de novo (uma vez) com o token atual.
     const atual = localStorage.getItem(CHAVE_REFRESH)
     if (atual && atual !== refresh) {
-      const { data } = await axios.post(`${api.defaults.baseURL}/auth/refresh`, { refresh_token: atual })
+      const { data } = await lentidao.monitorar(
+        axios.post(`${api.defaults.baseURL}/auth/refresh`, { refresh_token: atual }),
+      )
       return data
     }
     throw erro
@@ -86,8 +95,12 @@ export function renovarSessao() {
 }
 
 api.interceptors.response.use(
-  (resposta) => resposta,
+  (resposta) => {
+    lentidao.finalizar(resposta.config._idLentidao)
+    return resposta
+  },
   async (erro) => {
+    lentidao.finalizar(erro.config?._idLentidao)
     const original = erro.config
     const ehRotaDeAuth = original?.url?.startsWith('/auth/')
     if (erro.response?.status === 401 && original && !original._retentada && !ehRotaDeAuth) {
