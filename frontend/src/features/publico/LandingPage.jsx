@@ -126,7 +126,7 @@ function perguntasFrequentes(regras) {
     },
     {
       pergunta: 'O Esporte+ registra meus acessos?',
-      resposta: 'Sim. Para segurança e estatísticas de uso, o sistema registra as telas abertas e os logins, com data e hora, endereço IP, navegador, sistema e tipo de aparelho e, se você estiver logado, a sua conta. Senhas nunca são registradas.',
+      resposta: 'Sim. Para segurança e estatísticas de uso, o sistema registra as visitas à página inicial e a esta página e os logins, com data e hora, endereço IP, navegador, sistema e tipo de aparelho e, se você estiver logado, a sua conta. Senhas nunca são registradas.',
     },
   ]
 }

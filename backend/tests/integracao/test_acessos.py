@@ -1,7 +1,8 @@
 """Integração — registro de acessos (telas abertas e logins).
 
 Regras verificadas:
-  * cada tela aberta grava IP, país, navegador, sistema, dispositivo e o visitante;
+  * só a página inicial e a página Sobre são gravadas, as demais telas não;
+  * a tela aberta grava IP, país, navegador, sistema, dispositivo e o visitante;
   * com login, o acesso fica ligado ao usuário; token inválido não recusa o registro;
   * login com sucesso e login recusado (com o e-mail digitado) são gravados, nunca a senha;
   * robôs, monitores e ferramentas automáticas não são gravados, nem a rota /health;
@@ -59,7 +60,7 @@ class TestTelaAberta:
     def test_grava_ip_pais_navegador_e_dispositivo_do_celular(self, client, db):
         resposta = _abrir_tela(
             client,
-            "/quadras",
+            "/",
             headers=_cabecalhos(CELULAR, "177.1.2.3", **{"CF-IPCountry": "BR"}),
             id_visitante="abc-123",
             referencia="https://www.google.com/",
@@ -68,7 +69,7 @@ class TestTelaAberta:
 
         [acesso] = _acessos(db)
         assert acesso.evento == "pagina"
-        assert acesso.caminho == "/quadras"
+        assert acesso.caminho == "/"
         assert acesso.ip == "177.1.2.3"
         assert acesso.pais == "BR"
         assert acesso.navegador.startswith("Chrome Mobile 120")
@@ -95,7 +96,7 @@ class TestTelaAberta:
     def test_com_login_liga_o_acesso_ao_usuario(self, client, db):
         pessoa = criar_pessoa(db)
         headers = {**autenticar(client, pessoa.email), **_cabecalhos()}
-        _abrir_tela(client, "/agendamentos", headers=headers)
+        _abrir_tela(client, "/", headers=headers)
 
         acesso = _acessos(db)[-1]
         assert (acesso.tipo_usuario, acesso.usuario_id, acesso.email) == (
@@ -119,6 +120,19 @@ class TestTelaAberta:
     def test_robos_e_ferramentas_nao_sao_gravados(self, client, db, user_agent):
         assert _abrir_tela(client, headers=_cabecalhos(user_agent)).status_code == 204
         assert _acessos(db) == []
+
+    def test_so_pagina_inicial_e_sobre_sao_gravadas(self, client, db):
+        for caminho in [
+            "/",
+            "/sobre",
+            "/quadras",
+            "/admin",
+            "/login",
+            "/sobre/",
+            "/meus-agendamentos",
+        ]:
+            assert _abrir_tela(client, caminho).status_code == 204
+        assert [a.caminho for a in _acessos(db)] == ["/", "/sobre"]
 
     def test_health_nao_e_gravado(self, client, db):
         assert client.get("/health", headers=_cabecalhos()).status_code == 200
