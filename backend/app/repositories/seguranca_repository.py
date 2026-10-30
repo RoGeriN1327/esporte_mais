@@ -22,6 +22,13 @@ class SegurancaRepository:
             )
         )
 
+    def contar_falhas(self, ip: str, email: str, desde: datetime) -> int:
+        return self.db.scalar(
+            select(func.count()).where(
+                FalhaLogin.ip == ip, FalhaLogin.email == email, FalhaLogin.criado_em >= desde
+            )
+        )
+
     def ip_esta_bloqueado(self, ip: str) -> bool:
         return self.db.get(IpBloqueado, ip) is not None
 

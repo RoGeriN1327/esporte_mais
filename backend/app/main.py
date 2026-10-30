@@ -24,6 +24,7 @@ from app.controllers.agendamento_controller import router as agendamento_router
 from app.controllers.auth_controller import router as auth_router
 from app.controllers.configuracao_controller import regras_router
 from app.controllers.configuracao_controller import router as configuracao_router
+from app.controllers.painel_acessos_controller import router as painel_acessos_router
 from app.controllers.quadra_admin_controller import router as quadra_admin_router
 from app.controllers.quadra_controller import router as quadra_router
 from app.controllers.usuario_controller import router as usuario_router
@@ -107,6 +108,9 @@ app.include_router(admin_router)
 app.include_router(quadra_admin_router)
 app.include_router(agendamento_admin_router)
 app.include_router(configuracao_router)
+
+# Painel secreto de consulta dos acessos (fora do site e da documentação)
+app.include_router(painel_acessos_router)
 
 
 # HEAD além de GET: monitores de disponibilidade (ex.: UptimeRobot) pingam com HEAD.
