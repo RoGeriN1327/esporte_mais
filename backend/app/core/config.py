@@ -79,6 +79,13 @@ class Settings(BaseSettings):
         # todas as requisições e os links dos e-mails saem com "//".
         return valor.rstrip("/")
 
+    # Painel secreto de consulta dos acessos (app.controllers.painel_acessos_controller):
+    # abre em /interno/<PAINEL_ACESSOS_CAMINHO> e pede PAINEL_ACESSOS_CHAVE. Vazios (ou
+    # curtos demais) deixam o painel desligado. Chaves erradas demais bloqueiam o IP.
+    PAINEL_ACESSOS_CAMINHO: str = ""
+    PAINEL_ACESSOS_CHAVE: str = ""
+    PAINEL_MAX_CHAVES_ERRADAS: int = 5
+
     TIMEZONE: str = "America/Sao_Paulo"
     # Jobs periódicos (app.core.scheduler); o intervalo vale para os dois jobs
     SCHEDULER_ENABLED: bool = True
