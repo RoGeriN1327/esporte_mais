@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useLocation } from 'react-router-dom'
 
-import { registrarAcesso } from '../api/acessos.api'
+import { TELAS_REGISTRADAS, registrarAcesso } from '../api/acessos.api'
 
 // Espera a tela "assentar" antes de registrar: redirecionamentos (ex.: / → /login)
 // e o efeito duplicado do StrictMode geram um registro só, o da tela que ficou aberta.
@@ -11,6 +11,7 @@ export default function RegistroDeAcessos() {
   const { pathname } = useLocation()
 
   useEffect(() => {
+    if (!TELAS_REGISTRADAS.has(pathname)) return undefined
     const temporizador = setTimeout(() => registrarAcesso(pathname), ESPERA_MS)
     return () => clearTimeout(temporizador)
   }, [pathname])

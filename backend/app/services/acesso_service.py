@@ -21,6 +21,10 @@ EVENTO_PAGINA = "pagina"
 EVENTO_LOGIN = "login"
 EVENTO_LOGIN_RECUSADO = "login_recusado"
 
+# Só as telas de entrada no sistema: registrar todas geraria dados demais.
+# Manter igual a TELAS_REGISTRADAS em frontend/src/api/acessos.api.js.
+TELAS_REGISTRADAS = frozenset({"/", "/sobre"})
+
 
 def _cortar(valor: str | None, tamanho: int) -> str | None:
     valor = (valor or "").strip()
