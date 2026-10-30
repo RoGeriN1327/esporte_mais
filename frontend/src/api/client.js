@@ -40,7 +40,8 @@ export function registrarSessaoExpirada(callback) {
 
 api.interceptors.request.use((config) => {
   if (accessToken) config.headers.Authorization = `Bearer ${accessToken}`
-  config._idLentidao = lentidao.iniciar()
+  // Requisições em segundo plano (ex.: registro de acessos) não acionam o aviso de lentidão.
+  if (!config.semAvisoDeLentidao) config._idLentidao = lentidao.iniciar()
   return config
 })
 

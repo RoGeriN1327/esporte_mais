@@ -5,6 +5,7 @@ Use os aliases nos parâmetros das rotas para exigir o tipo de usuário:
     PessoaLogada   somente Usuário Pessoa (cidadão)
     AdminLogado    Gestor ou Operador
     GestorLogado   somente Gestor
+    UsuarioOpcional  usuário autenticado ou None (rotas públicas que aceitam login)
     IpLiberado     rotas públicas de autenticação: recusa IPs bloqueados
 """
 
@@ -20,7 +21,13 @@ from sqlalchemy.orm import Session
 from app.core import security
 from app.core.database import get_db
 from app.core.rate_limit import ip_do_cliente
-from app.exceptions import AcessoNegado, ContaDesativada, IpBloqueado, NaoAutenticado
+from app.exceptions import (
+    AcessoNegado,
+    ContaDesativada,
+    ErroDeDominio,
+    IpBloqueado,
+    NaoAutenticado,
+)
 from app.models import PerfilAdministrativo, StatusUsuario, TipoUsuario
 from app.repositories import (
     SegurancaRepository,
@@ -108,6 +115,22 @@ def get_current_user(
 
 
 UsuarioLogado = Annotated[UsuarioAtual, Depends(get_current_user)]
+
+
+def get_usuario_opcional(
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(bearer_scheme)],
+    db: SessaoDb,
+) -> UsuarioAtual | None:
+    """Como get_current_user, mas devolve None em vez de recusar sem login ou com token ruim."""
+    if credentials is None:
+        return None
+    try:
+        return get_current_user(credentials, db)
+    except ErroDeDominio:
+        return None
+
+
+UsuarioOpcional = Annotated[UsuarioAtual | None, Depends(get_usuario_opcional)]
 
 
 def require_pessoa(usuario: UsuarioLogado) -> UsuarioAtual:
