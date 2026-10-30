@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Acessos</title>
+<style nonce="{{NONCE}}">
+  :root {
+    --marca: #13703a; --marca-escura: #0f5c30; --fundo: #f6f8f7; --borda: #dce3df;
+    --texto: #0f1f17; --suave: #4a5a51; --apagado: #66766d; --erro: #b42318;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--texto);
+    font: 15px/1.45 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 1280px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  h2 { font-size: 17px; margin: 28px 0 12px; }
+  .sub { color: var(--apagado); margin: 0 0 20px; font-size: 14px; }
+  .cartao { background: #fff; border: 1px solid var(--borda); border-radius: 16px; padding: 20px; }
+  label { display: block; font-weight: 600; font-size: 13px; color: var(--suave); margin-bottom: 4px; }
+  input, select {
+    width: 100%; font: inherit; padding: 9px 12px; border: 1px solid var(--borda);
+    border-radius: 10px; background: #fff; color: var(--texto);
+  }
+  input:focus, select:focus, button:focus-visible { outline: 2px solid var(--marca); outline-offset: 1px; }
+  button {
+    font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 10px 18px;
+    background: var(--marca); color: #fff; cursor: pointer;
+  }
+  button:hover { background: var(--marca-escura); }
+  button.secundario { background: #fff; color: var(--suave); border: 1px solid var(--borda); }
+  button:disabled { opacity: .6; cursor: wait; }
+  .erro { color: var(--erro); font-size: 14px; margin: 10px 0 0; min-height: 1em; }
+  #entrar { max-width: 380px; margin: 12vh auto 0; }
+  #entrar form { display: grid; gap: 14px; }
+  .topo { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 4px; }
+  .topo > div { min-width: 0; }
+  .topo button { flex-shrink: 0; }
+  .filtros { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); align-items: end; }
+  .marcar { display: flex; align-items: center; gap: 8px; font-weight: 600; color: var(--suave); padding-bottom: 10px; }
+  .marcar input { width: auto; }
+  .numeros { display: grid; gap: 12px; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); margin-top: 16px; }
+  .numero { background: #fff; border: 1px solid var(--borda); border-radius: 14px; padding: 14px 16px; }
+  .numero strong { display: block; font-size: 26px; line-height: 1.1; color: var(--marca); font-variant-numeric: tabular-nums; }
+  .numero span { font-size: 13px; color: var(--apagado); }
+  .rolagem { overflow-x: auto; background: #fff; border: 1px solid var(--borda); border-radius: 14px; }
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--borda); white-space: nowrap; vertical-align: top; }
+  th { background: var(--fundo); font-size: 12px; text-transform: uppercase; letter-spacing: .03em; color: var(--suave); position: sticky; top: 0; }
+  tr:last-child td { border-bottom: 0; }
+  td.num { font-variant-numeric: tabular-nums; }
+  .vazio { color: var(--apagado); padding: 16px; }
+  .selo { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+  .selo.pagina { background: #e7f3ec; color: var(--marca-escura); }
+  .selo.login { background: #e3ecfb; color: #1d4ed8; }
+  .selo.login_recusado { background: #fdecea; color: var(--erro); }
+  .ua { color: var(--apagado); font-size: 12px; max-width: 420px; overflow: hidden; text-overflow: ellipsis; }
+  .aviso { color: var(--apagado); font-size: 13px; margin-top: 8px; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <section id="entrar" class="cartao">
+    <h1>Acesso restrito</h1>
+    <p class="sub">Informe a chave para continuar.</p>
+    <form id="form-chave">
+      <div>
+        <label for="chave">Chave</label>
+        <input id="chave" type="password" autocomplete="off" required autofocus>
+      </div>
+      <button type="submit">Entrar</button>
+    </form>
+    <p class="erro" id="erro-chave" role="alert"></p>
+  </section>
+
+  <section id="painel" hidden>
+    <div class="topo">
+      <div>
+        <h1>Acessos ao Esporte+</h1>
+        <p class="sub">Horários de Brasília. Robôs, monitores e a rota /health não são registrados.</p>
+      </div>
+      <button type="button" class="secundario" id="sair">Sair</button>
+    </div>
+
+    <form id="form-filtros" class="cartao filtros">
+      <div><label for="desde">De</label><input id="desde" type="date"></div>
+      <div><label for="ate">Até</label><input id="ate" type="date"></div>
+      <div>
+        <label for="evento">Evento</label>
+        <select id="evento">
+          <option value="">Todos</option>
+          <option value="pagina">Tela aberta</option>
+          <option value="login">Login</option>
+          <option value="login_recusado">Login recusado</option>
+        </select>
+      </div>
+      <label class="marcar"><input id="so-logados" type="checkbox"> Só logados</label>
+      <button type="submit" id="atualizar">Atualizar</button>
+    </form>
+    <p class="erro" id="erro-painel" role="alert"></p>
+
+    <div class="numeros" id="numeros"></div>
+
+    <h2>Usuários que entraram</h2>
+    <div class="rolagem">
+      <table>
+        <thead><tr><th>E-mail</th><th>Tipo</th><th>Logins</th><th>Telas</th><th>Último acesso</th></tr></thead>
+        <tbody id="usuarios"></tbody>
+      </table>
+    </div>
+
+    <h2>Acessos</h2>
+    <div class="rolagem">
+      <table>
+        <thead><tr>
+          <th>Data e hora</th><th>Evento</th><th>Tela</th><th>Usuário</th><th>IP</th><th>País</th>
+          <th>Aparelho</th><th>Navegador</th><th>Sistema</th><th>Visitante</th><th>Origem</th><th>User-agent</th>
+        </tr></thead>
+        <tbody id="acessos"></tbody>
+      </table>
+    </div>
+    <p class="aviso" id="aviso-limite"></p>
+  </section>
+</main>
+
+<script nonce="{{NONCE}}">
+(function () {
+  'use strict'
+  // Todo dado vem do banco e pode ter sido enviado por qualquer pessoa (user-agent,
+  // caminho, origem): é sempre exibido com textContent, nunca como HTML.
+  var CHAVE_SESSAO = 'painel_acessos_chave'
+  var URL_DADOS = window.location.pathname.replace(/\/+$/, '') + '/dados'
+  var EVENTOS = { pagina: 'Tela aberta', login: 'Login', login_recusado: 'Login recusado' }
+  var $ = function (id) { return document.getElementById(id) }
+
+  function lerChave() { try { return sessionStorage.getItem(CHAVE_SESSAO) } catch (e) { return null } }
+  function guardarChave(v) { try { sessionStorage.setItem(CHAVE_SESSAO, v) } catch (e) {} }
+  function apagarChave() { try { sessionStorage.removeItem(CHAVE_SESSAO) } catch (e) {} }
+
+  var chave = lerChave()
+
+  function dataHora(iso) {
+    return new Date(iso).toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })
+  }
+
+  function celula(linha, texto, classe) {
+    var td = document.createElement('td')
+    td.textContent = texto == null || texto === '' ? '—' : String(texto)
+    if (classe) td.className = classe
+    linha.appendChild(td)
+    return td
+  }
+
+  function preencher(corpo, itens, colunas, montar) {
+    corpo.replaceChildren()
+    if (!itens.length) {
+      var tr = document.createElement('tr')
+      var td = celula(tr, 'Nenhum registro.', 'vazio')
+      td.colSpan = colunas
+      corpo.appendChild(tr)
+      return
+    }
+    itens.forEach(function (item) {
+      var tr = document.createElement('tr')
+      montar(tr, item)
+      corpo.appendChild(tr)
+    })
+  }
+
+  function mostrarResumo(r) {
+    var numeros = [
+      [r.total, 'acessos'], [r.telas, 'telas abertas'], [r.logins, 'logins'],
+      [r.logins_recusados, 'logins recusados'], [r.aparelhos, 'navegadores diferentes'], [r.ips, 'IPs diferentes'],
+    ]
+    var alvo = $('numeros')
+    alvo.replaceChildren()
+    numeros.forEach(function (n) {
+      var div = document.createElement('div')
+      div.className = 'numero'
+      var forte = document.createElement('strong')
+      forte.textContent = n[0].toLocaleString('pt-BR')
+      var rotulo = document.createElement('span')
+      rotulo.textContent = n[1]
+      div.append(forte, rotulo)
+      alvo.appendChild(div)
+    })
+  }
+
+  function mostrar(dados) {
+    mostrarResumo(dados.resumo)
+    preencher($('usuarios'), dados.usuarios, 5, function (tr, u) {
+      celula(tr, u.email); celula(tr, u.tipo); celula(tr, u.logins, 'num'); celula(tr, u.telas, 'num')
+      celula(tr, dataHora(u.ultimo_acesso), 'num')
+    })
+    preencher($('acessos'), dados.acessos, 12, function (tr, a) {
+      celula(tr, dataHora(a.criado_em), 'num')
+      var selo = document.createElement('span')
+      selo.className = 'selo ' + (EVENTOS[a.evento] ? a.evento : '')
+      selo.textContent = EVENTOS[a.evento] || a.evento
+      var tdEvento = document.createElement('td')
+      tdEvento.appendChild(selo)
+      tr.appendChild(tdEvento)
+      celula(tr, a.caminho)
+      celula(tr, a.email ? a.email + (a.tipo_usuario ? ' (' + a.tipo_usuario + ')' : '') : '')
+      celula(tr, a.ip, 'num'); celula(tr, a.pais)
+      celula(tr, a.tipo_dispositivo + (a.dispositivo ? ' · ' + a.dispositivo : ''))
+      celula(tr, a.navegador); celula(tr, a.sistema)
+      celula(tr, a.id_visitante ? a.id_visitante.slice(0, 8) : '', 'num')
+      celula(tr, a.referencia)
+      var ua = celula(tr, a.user_agent, 'ua')
+      ua.title = a.user_agent
+    })
+    $('aviso-limite').textContent = dados.acessos.length >= dados.limite
+      ? 'Mostrando os ' + dados.limite + ' acessos mais recentes. Use os filtros para ver outros períodos.'
+      : ''
+  }
+
+  function filtros() {
+    return {
+      chave: chave,
+      desde: $('desde').value || null,
+      ate: $('ate').value || null,
+      evento: $('evento').value || null,
+      so_logados: $('so-logados').checked,
+    }
+  }
+
+  function trocarTela(logado) {
+    $('entrar').hidden = logado
+    $('painel').hidden = !logado
+  }
+
+  function consultar(botao, erro) {
+    botao.disabled = true
+    erro.textContent = ''
+    return fetch(URL_DADOS, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(filtros()),
+      cache: 'no-store',
+    }).then(function (resposta) {
+      if (resposta.status === 429) throw new Error('Muitas consultas. Aguarde um minuto.')
+      if (!resposta.ok) {
+        apagarChave()
+        chave = null
+        trocarTela(false)
+        throw new Error('Chave inválida.')
+      }
+      return resposta.json()
+    }).then(function (dados) {
+      trocarTela(true)
+      mostrar(dados)
+    }).catch(function (e) {
+      var alvo = $('painel').hidden ? $('erro-chave') : erro
+      alvo.textContent = e.message === 'Failed to fetch' ? 'Sem conexão com o servidor. Tente de novo.' : e.message
+    }).finally(function () {
+      botao.disabled = false
+    })
+  }
+
+  $('form-chave').addEventListener('submit', function (ev) {
+    ev.preventDefault()
+    chave = $('chave').value
+    $('chave').value = ''
+    consultar(ev.submitter || $('form-chave').querySelector('button'), $('erro-chave')).then(function () {
+      if (!$('painel').hidden) guardarChave(chave)
+    })
+  })
+
+  $('form-filtros').addEventListener('submit', function (ev) {
+    ev.preventDefault()
+    consultar($('atualizar'), $('erro-painel'))
+  })
+
+  $('sair').addEventListener('click', function () {
+    apagarChave()
+    chave = null
+    $('numeros').replaceChildren(); $('usuarios').replaceChildren(); $('acessos').replaceChildren()
+    trocarTela(false)
+    $('chave').focus()
+  })
+
+  if (chave) consultar($('atualizar'), $('erro-painel'))
+})()
+</script>
+</body>
+</html>
