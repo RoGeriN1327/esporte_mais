@@ -66,6 +66,7 @@ ROTAS_PROTEGIDAS = [
 ROTAS_PUBLICAS = [
     ("GET", "/health"),
     ("GET", "/regras"),
+    ("POST", "/acessos"),
     ("POST", "/usuarios"),
     ("POST", "/auth/login"),
     ("POST", "/auth/refresh"),

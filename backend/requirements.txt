@@ -12,3 +12,4 @@ slowapi
 apscheduler
 tzdata
 jinja2
+user-agents

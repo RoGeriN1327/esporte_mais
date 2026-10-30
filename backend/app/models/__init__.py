@@ -1,3 +1,4 @@
+from app.models.acesso import Acesso
 from app.models.agendamento import Agendamento
 from app.models.auth import RefreshToken, TokenRedefinicaoSenha, TokenRevogado
 from app.models.configuracao import (
@@ -19,6 +20,7 @@ from app.models.usuario_administrativo import UsuarioAdministrativo
 from app.models.usuario_pessoa import UsuarioPessoa
 
 __all__ = [
+    "Acesso",
     "Agendamento",
     "CHAVE_ANTECEDENCIA_CANCELAMENTO",
     "CHAVE_ANTECEDENCIA_LEMBRETE",

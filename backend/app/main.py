@@ -17,6 +17,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 
+from app.controllers.acesso_controller import router as acesso_router
 from app.controllers.admin_controller import router as admin_router
 from app.controllers.agendamento_admin_controller import router as agendamento_admin_router
 from app.controllers.agendamento_controller import router as agendamento_router
@@ -99,6 +100,7 @@ app.include_router(usuario_router)
 app.include_router(quadra_router)
 app.include_router(agendamento_router)
 app.include_router(regras_router)
+app.include_router(acesso_router)
 
 # Área administrativa (Gestor e Operador)
 app.include_router(admin_router)

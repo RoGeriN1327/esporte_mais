@@ -1,3 +1,4 @@
+from app.repositories.acesso_repository import AcessoRepository
 from app.repositories.agendamento_repository import AgendamentoRepository
 from app.repositories.configuracao_repository import ConfiguracaoRepository
 from app.repositories.quadra_repository import QuadraRepository
@@ -7,6 +8,7 @@ from app.repositories.usuario_administrativo_repository import UsuarioAdministra
 from app.repositories.usuario_pessoa_repository import UsuarioPessoaRepository
 
 __all__ = [
+    "AcessoRepository",
     "AgendamentoRepository",
     "ConfiguracaoRepository",
     "QuadraRepository",

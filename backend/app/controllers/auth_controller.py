@@ -2,6 +2,7 @@ from fastapi import APIRouter, Request
 
 from app.core.deps import IpLiberado, SessaoDb, UsuarioLogado
 from app.core.rate_limit import limiter
+from app.exceptions import ErroDeDominio
 from app.schemas.auth import (
     LoginRequest,
     LogoutRequest,
@@ -12,6 +13,7 @@ from app.schemas.auth import (
     TokenResponse,
     ValidarTokenRedefinicaoRequest,
 )
+from app.services.acesso_service import EVENTO_LOGIN, EVENTO_LOGIN_RECUSADO, AcessoService
 from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Autenticação"])
@@ -28,7 +30,20 @@ router = APIRouter(prefix="/auth", tags=["Autenticação"])
 )
 @limiter.limit("5/minute")
 def login(request: Request, dados: LoginRequest, ip: IpLiberado, db: SessaoDb) -> TokenResponse:
-    return TokenResponse(**AuthService(db).login(dados.email, dados.senha, ip))
+    try:
+        resultado = AuthService(db).login(dados.email, dados.senha, ip)
+    except ErroDeDominio:
+        AcessoService().registrar(request, EVENTO_LOGIN_RECUSADO, email=dados.email)
+        raise
+    usuario = resultado["usuario"]
+    AcessoService().registrar(
+        request,
+        EVENTO_LOGIN,
+        tipo_usuario=usuario["tipo"],
+        usuario_id=usuario["id"],
+        email=usuario["email"],
+    )
+    return TokenResponse(**resultado)
 
 
 @router.post(
