@@ -1,6 +1,7 @@
 // Gerenciar usuários (RF001: A7 cadastrar, A8 desativar e A9 reativar Usuário Pessoa pelo
-// Operador ou Gestor; Quadros 19 a 22 do DERS). A consulta carrega a lista ao clicar em "Buscar"
-// e filtra por nome, CPF e status no navegador (a API devolve a lista completa).
+// Operador ou Gestor; Quadros 19 a 22 do DERS). A consulta carrega a lista ao clicar em "Buscar".
+// A API devolve o CPF mascarado (***.982.247-**): a busca por CPF (completo) é feita nela;
+// nome e status são filtrados no navegador.
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
@@ -28,13 +29,11 @@ import { normalizarTexto } from '../../utils/texto'
 
 const CHAVES = ['nome', 'cpf', 'status']
 
-function filtrar(usuarios, { nome, cpf, status }) {
+function filtrar(usuarios, { nome, status }) {
   const termo = normalizarTexto(nome)
-  const digitos = somenteDigitos(cpf)
   return usuarios.filter(
     (usuario) =>
       (!termo || normalizarTexto(usuario.nome).includes(termo)) &&
-      (!digitos || usuario.cpf.includes(digitos)) &&
       (!status || usuario.status === status),
   )
 }
@@ -99,9 +98,10 @@ export default function UsuariosAdminPage() {
   const [erroModal, setErroModal] = useState('')
   const [modal, setModal] = useState(null)
 
+  const cpfBuscado = somenteDigitos(consulta.filtros.cpf)
   const { data: todos, isFetching, isError } = useQuery({
-    queryKey: ['admin-usuarios-pessoa'],
-    queryFn: adminApi.listarUsuariosPessoa,
+    queryKey: ['admin-usuarios-pessoa', cpfBuscado],
+    queryFn: () => adminApi.listarUsuariosPessoa({ cpf: cpfBuscado }),
     enabled: consulta.consultado,
   })
   const usuarios = todos ? filtrar(todos, consulta.filtros) : undefined
@@ -155,7 +155,7 @@ export default function UsuariosAdminPage() {
           <Campo label="Nome">
             <input name="nome" defaultValue={consulta.filtros.nome} autoComplete="off" placeholder="Nome completo ou parte…" className={classesDeInput(false)} />
           </Campo>
-          <Campo label="CPF">
+          <Campo label="CPF" dica="CPF completo">
             <input
               name="cpf"
               defaultValue={consulta.filtros.cpf}
@@ -198,7 +198,7 @@ export default function UsuariosAdminPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate font-extrabold text-cinza-900">{usuario.nome}</span>
                   <span className="mt-0.5 block truncate text-sm text-cinza-600">
-                    <span className="tabular-nums">{mascararCpf(usuario.cpf)}</span> · {usuario.email}
+                    <span className="tabular-nums">{usuario.cpf}</span> · {usuario.email}
                   </span>
                 </span>
                 <Badge>{usuario.status}</Badge>
@@ -218,7 +218,7 @@ export default function UsuariosAdminPage() {
             </div>
             <ListaDetalhes
               linhas={[
-                { rotulo: 'CPF', valor: mascararCpf(detalhe.cpf), classe: 'tabular-nums' },
+                { rotulo: 'CPF', valor: detalhe.cpf, classe: 'tabular-nums' },
                 { rotulo: 'E-mail', valor: detalhe.email },
                 { rotulo: 'Cadastrado em', valor: formatarData(detalhe.data_cadastro), classe: 'tabular-nums' },
               ]}

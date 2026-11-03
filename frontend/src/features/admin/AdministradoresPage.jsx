@@ -42,7 +42,7 @@ function filtrar(administradores, { nome, perfil, status }) {
 function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro }) {
   const { register, handleSubmit, setValue, formState: { errors } } = useForm({
     defaultValues: inicial
-      ? { nome: inicial.nome, cpf: mascararCpf(inicial.cpf), email: inicial.email, perfil: inicial.perfil }
+      ? { nome: inicial.nome, cpf: '', email: inicial.email, perfil: inicial.perfil }
       : { nome: '', cpf: '', email: '', perfil: '' },
   })
 
@@ -58,15 +58,23 @@ function FormularioAdministrador({ inicial, aoSalvar, aoCancelar, salvando, erro
         />
       </Campo>
       <div className="grid gap-5 sm:grid-cols-2">
-        <Campo label="CPF" obrigatorio erro={errors.cpf?.message}>
+        {/* Na edição a API só tem o CPF mascarado: o campo fica vazio e só é preenchido
+            para corrigir o cadastro (vazio mantém o CPF atual). */}
+        <Campo
+          label={inicial ? 'Novo CPF' : 'CPF'}
+          obrigatorio={!inicial}
+          erro={errors.cpf?.message}
+          dica={inicial ? `Atual: ${inicial.cpf}. Preencha só para corrigir.` : undefined}
+        >
           <input
             className={`${classesDeInput(errors.cpf)} tabular-nums`}
             inputMode="numeric"
             autoComplete="off"
             placeholder="000.000.000-00"
             {...register('cpf', {
-              required: 'Informe o CPF.',
-              validate: (valor) => cpfValido(valor) || 'CPF inválido. Informe 11 dígitos numéricos válidos.',
+              required: inicial ? false : 'Informe o CPF.',
+              validate: (valor) =>
+                (inicial && !valor) || cpfValido(valor) || 'CPF inválido. Informe 11 dígitos numéricos válidos.',
               onChange: (evento) => setValue('cpf', mascararCpf(evento.target.value)),
             })}
           />
@@ -247,7 +255,7 @@ export default function AdministradoresPage() {
             </div>
             <ListaDetalhes
               linhas={[
-                { rotulo: 'CPF', valor: mascararCpf(detalhe.cpf), classe: 'tabular-nums' },
+                { rotulo: 'CPF', valor: detalhe.cpf, classe: 'tabular-nums' },
                 { rotulo: 'E-mail', valor: detalhe.email },
                 { rotulo: 'Cadastrado em', valor: formatarData(detalhe.data_cadastro), classe: 'tabular-nums' },
               ]}

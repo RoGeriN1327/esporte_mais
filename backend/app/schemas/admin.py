@@ -5,7 +5,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.enums import PerfilAdministrativo, StatusUsuario
-from app.schemas.validadores import CPF, Email, Nome
+from app.schemas.validadores import CPF, CPFOculto, Email, Nome
 
 
 class _DadosCadastraisBase(BaseModel):
@@ -18,7 +18,14 @@ class AdministradorCreate(_DadosCadastraisBase):
     perfil: PerfilAdministrativo = Field(description='"Gestor" ou "Operador"')
 
 
-class AdministradorUpdate(_DadosCadastraisBase):
+class AdministradorUpdate(BaseModel):
+    nome: Nome = Field(description="Nome completo (máx. 100 caracteres)")
+    cpf: CPF | None = Field(
+        default=None,
+        description="Novo CPF, só para corrigir o cadastro; omitido mantém o atual "
+        "(a listagem devolve o CPF mascarado)",
+    )
+    email: Email
     perfil: PerfilAdministrativo
 
 
@@ -27,9 +34,22 @@ class AdministradorOut(BaseModel):
 
     id: int
     nome: str
-    cpf: str
+    cpf: CPFOculto
     email: str
     perfil: PerfilAdministrativo
+    status: StatusUsuario
+    data_cadastro: datetime
+
+
+class UsuarioPessoaAdminOut(BaseModel):
+    """Cidadão visto pela administração: CPF mascarado."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    nome: str
+    cpf: CPFOculto
+    email: str
     status: StatusUsuario
     data_cadastro: datetime
 

@@ -9,7 +9,7 @@ from typing import Annotated
 
 from pydantic import AfterValidator, EmailStr
 
-from app.utils.cpf import cpf_valido, normalizar_cpf
+from app.utils.cpf import cpf_valido, normalizar_cpf, ocultar_cpf
 
 NOME_TAMANHO_MAXIMO = 100
 SENHA_TAMANHO_MINIMO = 8
@@ -53,3 +53,7 @@ Nome = Annotated[str, AfterValidator(validar_nome)]
 CPF = Annotated[str, AfterValidator(validar_cpf)]
 Email = Annotated[EmailStr, AfterValidator(normalizar_email)]
 Senha = Annotated[str, AfterValidator(validar_tamanho_senha)]
+
+# Saída da área administrativa: a secretaria vê o CPF mascarado (***.982.247-**); o CPF
+# completo nunca sai da API nessas rotas. Busca e cadastro continuam recebendo o CPF inteiro.
+CPFOculto = Annotated[str, AfterValidator(ocultar_cpf)]

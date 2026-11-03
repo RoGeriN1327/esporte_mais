@@ -16,6 +16,7 @@ import pytest
 
 from app.models import PerfilAdministrativo, StatusAgendamento, StatusUsuario
 from app.services.agendamento_service import MSG_HORARIO_OCUPADO, AgendamentoService
+from app.utils.cpf import ocultar_cpf
 from tests.fabricas import (
     AMANHA,
     HOJE,
@@ -67,8 +68,8 @@ class TestPainelConsolidado:
             resposta = client.get("/admin/agendamentos", headers=cabecalho)
             assert resposta.status_code == 200
             assert {(a["nome_usuario"], a["cpf_usuario"]) for a in resposta.json()} == {
-                ("Ana", ana.cpf),
-                ("Bia", bia.cpf),
+                ("Ana", ocultar_cpf(ana.cpf)),
+                ("Bia", ocultar_cpf(bia.cpf)),
             }
 
     def test_filtros_por_cidadao_quadra_esporte_status_e_data(self, client, db, auth_admin):
@@ -117,7 +118,7 @@ class TestAgendamentoEmNomeDoCidadao:
         corpo = resposta.json()
         assert (corpo["status"], corpo["cpf_usuario"], corpo["id_admin_responsavel"]) == (
             "Confirmado",
-            pessoa.cpf,
+            ocultar_cpf(pessoa.cpf),
             operador.id,
         )
         assert len(eventos(caixa_de_email, "confirmacao_agendamento", para=pessoa.email)) == 1

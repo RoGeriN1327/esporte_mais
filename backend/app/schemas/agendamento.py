@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 
 from app.models import Agendamento
 from app.models.enums import StatusAgendamento
-from app.schemas.validadores import CPF
+from app.schemas.validadores import CPF, CPFOculto
 
 
 class AgendamentoCreate(BaseModel):
@@ -60,7 +60,7 @@ class RemarcacaoRequest(BaseModel):
 
 class AgendamentoAdminOut(AgendamentoOut):
     nome_usuario: str
-    cpf_usuario: str
+    cpf_usuario: CPFOculto
     id_admin_responsavel: int | None
 
     @classmethod

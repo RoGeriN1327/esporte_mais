@@ -10,8 +10,9 @@ export async function cadastrarAdministrador({ nome, cpf, email, perfil }) {
   return data
 }
 
+// O CPF só vai quando preenchido (correção de cadastro); sem ele a API mantém o atual.
 export async function editarAdministrador(id, { nome, cpf, email, perfil }) {
-  const { data } = await api.put(`/admin/administradores/${id}`, { nome, cpf, email, perfil })
+  const { data } = await api.put(`/admin/administradores/${id}`, { nome, cpf: cpf || undefined, email, perfil })
   return data
 }
 
@@ -20,8 +21,9 @@ export async function desativarAdministrador(id) {
   return data
 }
 
-export async function listarUsuariosPessoa() {
-  const { data } = await api.get('/admin/usuarios-pessoa')
+/** Cidadãos com CPF mascarado; `cpf` (completo) filtra na API. */
+export async function listarUsuariosPessoa({ cpf } = {}) {
+  const { data } = await api.get('/admin/usuarios-pessoa', { params: cpf ? { cpf } : undefined })
   return data
 }
 

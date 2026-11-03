@@ -1,4 +1,4 @@
-from fastapi import APIRouter, status
+from fastapi import APIRouter, Query, status
 
 from app.core.deps import AdminLogado, GestorLogado, SessaoDb
 from app.schemas.admin import (
@@ -7,10 +7,11 @@ from app.schemas.admin import (
     AdministradorUpdate,
     IpBloqueadoOut,
     UsuarioPessoaAdminCreate,
+    UsuarioPessoaAdminOut,
 )
 from app.schemas.auth import MensagemResponse
-from app.schemas.usuario import UsuarioPessoaOut
 from app.services.admin_service import AdminService
+from app.utils.cpf import normalizar_cpf
 
 router = APIRouter(prefix="/admin", tags=["Administração de Usuários"])
 
@@ -66,18 +67,22 @@ def desativar_administrador(admin_id: int, gestor: GestorLogado, db: SessaoDb) -
 
 @router.get(
     "/usuarios-pessoa",
-    response_model=list[UsuarioPessoaOut],
+    response_model=list[UsuarioPessoaAdminOut],
     summary="Listar usuários pessoa",
-    description="Lista os cidadãos cadastrados, ativos e desativados. "
-    "Acessível a Gestor e Operador.",
+    description="Lista os cidadãos cadastrados, ativos e desativados, com o CPF mascarado "
+    "(***.982.247-**). Filtro opcional pelo CPF completo. Acessível a Gestor e Operador.",
 )
-def listar_usuarios_pessoa(_admin: AdminLogado, db: SessaoDb) -> list[UsuarioPessoaOut]:
-    return AdminService(db).listar_usuarios_pessoa()
+def listar_usuarios_pessoa(
+    _admin: AdminLogado,
+    db: SessaoDb,
+    cpf: str | None = Query(default=None, description="CPF completo (com ou sem máscara)"),
+) -> list[UsuarioPessoaAdminOut]:
+    return AdminService(db).listar_usuarios_pessoa(normalizar_cpf(cpf) if cpf else None)
 
 
 @router.post(
     "/usuarios-pessoa",
-    response_model=UsuarioPessoaOut,
+    response_model=UsuarioPessoaAdminOut,
     status_code=status.HTTP_201_CREATED,
     summary="Cadastrar usuário pessoa (pela administração)",
     description="Cria um Usuário Pessoa com senha aleatória enviada por e-mail de "
@@ -85,7 +90,7 @@ def listar_usuarios_pessoa(_admin: AdminLogado, db: SessaoDb) -> list[UsuarioPes
 )
 def cadastrar_usuario_pessoa(
     dados: UsuarioPessoaAdminCreate, _admin: AdminLogado, db: SessaoDb
-) -> UsuarioPessoaOut:
+) -> UsuarioPessoaAdminOut:
     return AdminService(db).criar_usuario_pessoa(dados)
 
 
@@ -105,12 +110,14 @@ def desativar_usuario_pessoa(
 
 @router.post(
     "/usuarios-pessoa/{usuario_id}/reativar",
-    response_model=UsuarioPessoaOut,
+    response_model=UsuarioPessoaAdminOut,
     summary="Reativar usuário pessoa",
     description="Reativa um cidadão desativado; o login volta a funcionar "
     "imediatamente com as credenciais anteriores. Acessível a Gestor e Operador.",
 )
-def reativar_usuario_pessoa(usuario_id: int, _admin: AdminLogado, db: SessaoDb) -> UsuarioPessoaOut:
+def reativar_usuario_pessoa(
+    usuario_id: int, _admin: AdminLogado, db: SessaoDb
+) -> UsuarioPessoaAdminOut:
     return AdminService(db).reativar_usuario_pessoa(usuario_id)
 
 
