@@ -132,16 +132,24 @@ export function Alerta({ tipo = 'erro', children }) {
 export function Modal({ aberto, titulo, onFechar, largo = false, children }) {
   const idTitulo = useId()
   const caixa = useRef(null)
+  // As páginas passam onFechar como função nova a cada render (ex.: () => setModal(null)).
+  // Se ele fosse dependência do efeito abaixo, cada tecla digitada num campo do modal
+  // re-renderizaria a página, o efeito rodaria de novo e o foco voltaria para a caixa,
+  // tirando o cursor do campo. Por isso o efeito depende só de `aberto`.
+  const aoFechar = useRef(onFechar)
+  useEffect(() => {
+    aoFechar.current = onFechar
+  })
 
   useEffect(() => {
     if (!aberto) return
     function aoTeclar(evento) {
-      if (evento.key === 'Escape') onFechar?.()
+      if (evento.key === 'Escape') aoFechar.current?.()
     }
     document.addEventListener('keydown', aoTeclar)
     caixa.current?.focus()
     return () => document.removeEventListener('keydown', aoTeclar)
-  }, [aberto, onFechar])
+  }, [aberto])
 
   if (!aberto) return null
   return (

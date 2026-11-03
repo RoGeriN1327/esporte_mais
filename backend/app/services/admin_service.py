@@ -77,14 +77,15 @@ class AdminService:
         # desativar nem se rebaixar, o sistema nunca fica sem nenhum Gestor.
         if admin_id == gestor_atual.id and dados.perfil is not PerfilAdministrativo.GESTOR:
             raise RegraDeNegocioViolada(MSG_AUTO_REBAIXAMENTO)
+        cpf = dados.cpf or admin.cpf
         self._usuarios.validar_unicidade_global(
-            cpf=dados.cpf,
+            cpf=cpf,
             email=dados.email,
             ignorar_tipo=TipoUsuario.ADMINISTRATIVO,
             ignorar_id=admin_id,
         )
         self.admins.atualizar(
-            admin, nome=dados.nome, cpf=dados.cpf, email=dados.email, perfil=dados.perfil
+            admin, nome=dados.nome, cpf=cpf, email=dados.email, perfil=dados.perfil
         )
         self.db.commit()
         return admin
@@ -101,7 +102,10 @@ class AdminService:
 
     # --- Usuários Pessoa (cidadãos) -----------------------------------------
 
-    def listar_usuarios_pessoa(self) -> list[UsuarioPessoa]:
+    def listar_usuarios_pessoa(self, cpf: str | None = None) -> list[UsuarioPessoa]:
+        if cpf:
+            usuario = self.pessoas.obter_por_cpf(cpf)
+            return [usuario] if usuario else []
         return self.pessoas.listar()
 
     def criar_usuario_pessoa(self, dados: UsuarioPessoaAdminCreate) -> UsuarioPessoa:

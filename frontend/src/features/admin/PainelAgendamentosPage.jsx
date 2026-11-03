@@ -202,7 +202,7 @@ export default function PainelAgendamentosPage() {
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0">
                 <p className="break-words text-lg font-extrabold text-cinza-900">{detalhe.nome_usuario}</p>
-                <p className="text-sm tabular-nums text-cinza-600">CPF {mascararCpf(detalhe.cpf_usuario)}</p>
+                <p className="text-sm tabular-nums text-cinza-600">CPF {detalhe.cpf_usuario}</p>
               </div>
               <Badge>{detalhe.status}</Badge>
             </div>
